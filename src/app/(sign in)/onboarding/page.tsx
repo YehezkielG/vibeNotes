@@ -68,7 +68,7 @@ export default function EditProfilePage() {
   const { data: session, status } = useSession();
 
   // Initialize state with data from the session
-  const [displayName, setDisplayName] = useState(session?.user?.displayName || session?.user?.name || "");
+  const [displayName, setDisplayName] = useState(session?.user?.name || session?.user?.displayName || "");
   const [username, setUsername] = useState("");
   const [gender, setGender] = useState("");
   const [bio, setBio] = useState("");

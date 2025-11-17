@@ -27,7 +27,7 @@ export default async function RootLayout({
       <body
     className={`${inter.variable} antialiased px-2 sm:px-32 flex justify-center h-svh items-center`}>
     <AuthSessionProvider>
-    {children}
+          {children}
         <div className="absolute bottom-0">
           <Footer />
         </div>

@@ -23,14 +23,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased px-2 mainBody sm:px-32`}>
+      <body className={`${inter.variable} antialiased px-2 mainBody sm:px-28`}>
         <AuthSessionProvider>
           <Header />
           <div className="flex">
-            <aside className="w-1/4 pr-8 hidden lg:block">
+            <aside className="w-3/12 pr-8 hidden lg:block">
               <Navbar />
             </aside>
-            <main className="w-full lg:w-3/4">{children}</main>
+            <main className="w-full lg:w-3/4 px-5">{children}</main>
+            <aside className="w-3/12 pl-8 hidden xl:block">
+              {/* Future right sidebar content can go here */}
+              Following
+            </aside>
           </div>
         </AuthSessionProvider>
       </body>

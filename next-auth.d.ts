@@ -6,6 +6,8 @@ declare module "next-auth" {
       id?: string;
       displayName?: string | null;
       bio?: string | null;
+      username?: string | null; // added
+      gender?: string | null;   // added
       // add other optional custom fields here
     } & DefaultSession["user"];
   }
@@ -14,5 +16,7 @@ declare module "next-auth" {
     id?: string;
     displayName?: string | null;
     bio?: string | null;
+    username?: string | null; // added
+    gender?: string | null;   // added
   }
 }
