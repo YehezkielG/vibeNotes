@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Note from "@/models/Note";
+import { analyzeEmotion } from "@/lib/analyzeEmotion";
 
 export async function POST(request: Request) {
     try {
@@ -24,11 +25,18 @@ export async function POST(request: Request) {
 
         await dbConnect();
 
+        const emotionResult = await analyzeEmotion(content.trim());
+
+        if(emotionResult.error){
+            return NextResponse.json({ message: "Emotion analysis failed.", error: emotionResult.error }, { status: 500 });
+        }
+
         const newNote = new Note({
             author: userId,
             title: title.trim(),
             content: content.trim(),
             isPublic: !!isPublic,
+            emotion: emotionResult.raw,
             // Emotion can be added later, e.g., via an analysis function
         });
 

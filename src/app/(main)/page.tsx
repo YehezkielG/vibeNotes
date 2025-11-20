@@ -1,4 +1,4 @@
-export default async function Home() {
+export default function Home() {
   return (
     <div>
       <h1>Public Notes</h1>

@@ -1,10 +1,8 @@
-import { NextResponse } from "next/server";
 import { franc } from "franc-min";
+import 'server-only';
 
-const TRANSLATOR_API =
-    "https://router.huggingface.co/hf-inference/models/Helsinki-NLP/opus-mt-mul-en";
-const EMOTION_API =
-    "https://router.huggingface.co/hf-inference/models/facebook/bart-large-mnli";
+const TRANSLATOR_API = "https://router.huggingface.co/hf-inference/models/Helsinki-NLP/opus-mt-mul-en";
+const EMOTION_API ="https://router.huggingface.co/hf-inference/models/facebook/bart-large-mnli";
 
 const HEADERS = {
     Authorization: `Bearer ${process.env.HUGGINGFACE_TOKEN}`,
@@ -41,24 +39,21 @@ async function translateToEnIfNeeded(sentence: string): Promise<{
     return { translated, lang: langCode };
 }
 
-export async function POST(req: Request) {
-    try {
-        const body = await req.json();
-        const { text } = body as { text?: string };
 
+export async function analyzeEmotion(text: string) {
+     try {
         if (!text || typeof text !== "string") {
-            return NextResponse.json(
-                { error: "text must be a non-empty string" },
-                { status: 400 },
-            );
+            return {
+                error: "text must be a non-empty string",
+                status: 400}
         }
 
         const sentences = splitIntoSentences(text);
         if (sentences.length === 0) {
-            return NextResponse.json(
-                { error: "text must contain at least one sentence" },
-                { status: 400 },
-            );
+            return {
+                error: "text must contain at least one sentence",
+                status: 400,
+            }
         }
 
         const translatedParts = await Promise.all(
@@ -66,9 +61,6 @@ export async function POST(req: Request) {
         );
 
         const normalizedText = translatedParts.map((p) => p.translated).join(" ");
-        const detectedLangs = Array.from(
-            new Set(translatedParts.map((p) => p.lang)),
-        );
 
         const emotionRes = await fetch(EMOTION_API, {
             headers: HEADERS,
@@ -76,20 +68,17 @@ export async function POST(req: Request) {
             body: JSON.stringify({
                 inputs: normalizedText,
                 parameters: {
-                    candidate_labels: ["Happy", "Sad", "Angry", "Love", "Anxiety"],
+                    candidate_labels: ["Happy", "Sad", "Angry", "Love", "Anxiety", "Disgust", "Anger"],
                 },
             }),
         });
         const emotionData = await emotionRes.json();
-        const topEmotion = emotionData?.labels?.[0] ?? null;
+        console.log("Emotion analysis result:", emotionData);
 
-        return NextResponse.json({
-            original_langs: detectedLangs,
-            normalized_text: normalizedText,
-            emotion: topEmotion,
+        return {
             raw: emotionData,
-        });
+        };
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return { error: error.message };
     }
 }

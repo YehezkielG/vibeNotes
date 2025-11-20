@@ -25,7 +25,7 @@ const NoteSchema = new Schema(
     },
     // AI emotion tag
     emotion: {
-      type: String,
+      type: Object,
       default: 'neutral',
     },
     // Future tags feature

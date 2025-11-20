@@ -1,22 +1,25 @@
-"use client";
+"use client"
+import { useEffect, useState } from "react";
+import TextEditor from "@/components/TextEditor";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import {
-  FileText,
-  Globe2,
-  Lock,
-  Loader2,
-  Maximize2,
-  Minimize2,
-  Save,
-  RotateCcw,
-  Copy,
-  Trash2,
-} from "lucide-react";
+export default function NewNotePage(){
+  const [labelEmotion, setLabelEmotion] = useState<[]>([]);
 
-const LOCAL_DRAFT_KEY = "new-note-draft";
+  useEffect(() => {
+    console.log("Detected Emotion:", labelEmotion);
+  }, [labelEmotion]);
+  
 
-export default function NewNotePage() {
+  return <>
+    <TextEditor analyzeEmotion={setLabelEmotion} />    
+    {labelEmotion.length > 0 && (
+      <div className="mt-4 p-4 bg-blue-100 text-blue-800 rounded">
+        {labelEmotion.map((item : {label: string, score: number}, index) => (
+          <span key={index} className="inline-block mr-2">
+            {item.label} ({(item.score * 100).toFixed(2)}%)
+          </span>
+        ))}
+      </div>
+    )}
+  </>;
 }
