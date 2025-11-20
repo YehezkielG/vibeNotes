@@ -19,9 +19,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased px-2 mainBody sm:px-28`}>
@@ -31,8 +31,7 @@ export default function RootLayout({
               <Navbar />
             </aside>
             <main className="w-full top-0 px-5">{children}</main>
-            <aside className="sticky top-0 h-svh w-3/12 pl-8 xl:block">
-              {/* Future right sidebar content can go here */}
+            <aside className="sticky top-0 h-svh w-3/12 pl-8 hidden xl:block overflow-y-auto">
               <RightSidebar />
               <div className="absolute bottom-0" style={{
                 fontSize:"10px"

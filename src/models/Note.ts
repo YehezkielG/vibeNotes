@@ -23,10 +23,10 @@ const NoteSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    // AI emotion tag
+    // AI emotion tag (raw response from AI service / HF)
     emotion: {
-      type: Object,
-      default: 'neutral',
+      type: Schema.Types.Mixed,
+      default: null,
     },
     // Future tags feature
     tags: [String],
