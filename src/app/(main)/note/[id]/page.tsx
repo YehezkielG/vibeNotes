@@ -26,12 +26,50 @@ export default async function NoteDetailPage({
   await dbConnect();
   await User;
 
-  const note = (await Note.findById(id)
+  const noteRaw = (await Note.findById(id)
     .populate("author", "username displayName image")
-    .lean()) as NoteType | null;
+    .lean()) as any | null;
 
-  if (!note) {
+  if (!noteRaw) {
     notFound();
+  }
+
+  // Manually populate response/reply authors to avoid strictPopulate issues
+  const note = noteRaw as NoteType;
+  if (Array.isArray(note.responses) && note.responses.length > 0) {
+    const userIds = new Set<string>();
+    note.responses.forEach((r: any) => {
+      if (r?.author) userIds.add(r.author.toString());
+      if (Array.isArray(r.replies)) {
+        r.replies.forEach((rep: any) => {
+          if (rep?.author) userIds.add(rep.author.toString());
+        });
+      }
+    });
+
+    if (userIds.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
+        "username displayName image"
+      ).lean();
+      const map = new Map(users.map((u: any) => [u._id.toString(), u]));
+
+      note.responses = note.responses.map((r: any) => ({
+        ...r,
+        likedBy: Array.isArray(r.likedBy)
+          ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
+          : [],
+        author: map.get(r.author?.toString?.()) || r.author,
+        replies: Array.isArray(r.replies)
+          ? r.replies.map((rep: any) => ({
+              ...rep,
+              likedBy: Array.isArray(rep.likedBy)
+                ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
+                : [],
+              author: map.get(rep.author?.toString?.()) || rep.author,
+            }))
+          : r.replies,
+      }));
+    }
   }
 
   if (!note.isPublic) {
@@ -79,13 +117,15 @@ export default async function NoteDetailPage({
     <>
       <article className="rounded-xl border border-transparent bg-white/70 backdrop-blur transition-shadow">
         <div className="relative flex items-center">
-          <Image
-            src={author.image}
-            alt="Author Avatar"
-            width={50}
-            height={50}
-            className="mr-3 rounded-full"
-          />
+          <div className="w-12 h-12 rounded-full overflow-hidden mr-3">
+            <Image
+              src={author.image}
+              alt="Author Avatar"
+              width={50}
+              height={50}
+              className="object-cover w-full h-full"
+            />
+          </div>
           <div className="font-medium">
             <Link href={`/profile/${author.username}`}>
               {author.displayName}
@@ -114,7 +154,7 @@ export default async function NoteDetailPage({
           />
           <button className="inline-flex items-center gap-1 hover:text-gray-700">
             <MessageCircle size={16} />
-            <span>0</span>
+            <span>{note.responses?.length || 0}</span>
           </button>
           <button className="inline-flex items-center gap-1 hover:text-gray-700">
             <Share2 size={16} />
@@ -151,7 +191,60 @@ export default async function NoteDetailPage({
           )}
         </div>
       </article>
-      <Response />
+      {/* Serialize responses to plain JS objects so client components receive only
+          plain data (no Mongoose docs or BSON ObjectId instances with toJSON)
+      */}
+      {(() => {
+        const serialResponses = (note.responses || []).map((r: any) => ({
+          text: r.text,
+          likes: r.likes ?? 0,
+          likedBy: Array.isArray(r.likedBy)
+            ? r.likedBy.map((id: any) => (id?.toString ? id.toString() : String(id)))
+            : [],
+          createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+          // author may be populated user object or an id
+          author:
+            r.author && typeof r.author === "object"
+              ? {
+                  id: r.author._id?.toString ? r.author._id.toString() : String(r.author._id ?? ""),
+                  username: r.author.username ?? "",
+                  displayName: r.author.displayName ?? r.author.username ?? "",
+                  image: r.author.image ?? "/default-profile.png",
+                }
+              : r.author?.toString?.()
+              ? r.author.toString()
+              : String(r.author ?? ""),
+          replies: Array.isArray(r.replies)
+            ? r.replies.map((rep: any) => ({
+                text: rep.text,
+                likes: rep.likes ?? 0,
+                likedBy: Array.isArray(rep.likedBy)
+                  ? rep.likedBy.map((id: any) => (id?.toString ? id.toString() : String(id)))
+                  : [],
+                createdAt: rep.createdAt ? new Date(rep.createdAt).toISOString() : null,
+                author:
+                  rep.author && typeof rep.author === "object"
+                    ? {
+                        id: rep.author._id?.toString ? rep.author._id.toString() : String(rep.author._id ?? ""),
+                        username: rep.author.username ?? "",
+                        displayName: rep.author.displayName ?? rep.author.username ?? "",
+                        image: rep.author.image ?? "/default-profile.png",
+                      }
+                    : rep.author?.toString?.()
+                    ? rep.author.toString()
+                    : String(rep.author ?? ""),
+              }))
+            : [],
+        }));
+
+        return (
+          <Response
+            noteId={note._id?.toString?.() ?? ""}
+            initialResponses={serialResponses}
+            isPublic={note.isPublic}
+          />
+        );
+      })()}
     </>
   );
 }

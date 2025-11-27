@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const userId = session.user.id;
 
-    const { username, displayName, bio } = await request.json();
+    const { username, displayName, bio, image } = await request.json();
 
     // validate payload via centralized validators
     const validationError = validateOnboarding({
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
         displayName: normalizedDisplayName,
         name: normalizedDisplayName,
         bio: bio,
+        image: image || session.user.image,
         isOnboarded: true,
         followers: [],
         following: [],

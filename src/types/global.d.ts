@@ -8,12 +8,18 @@ type UserProfileType = {
 
 type NoteResponseReply = {
   text: string;
+  author: string | UserProfileType;
   likes: number;
+  likedBy: string[];
+  createdAt: string;
 };
 
 type NoteResponse = {
   text: string;
+  author: string | UserProfileType;
   likes: number;
+  likedBy: string[];
+  createdAt: string;
   replies: NoteResponseReply[];
 };
 

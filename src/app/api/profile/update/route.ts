@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import User from "@/models/User";
+import { validateUsername, validateDisplayName, validateBio } from "@/lib/utils/validator";
 
 export async function PATCH(request: Request) {
   try {
@@ -11,15 +12,40 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const { displayName, bio, image } = body ?? {};
+    const { username, displayName, bio, image } = body ?? {};
 
-    if (!displayName && !bio && !image) {
+    if (!username && !displayName && !bio && !image) {
       return NextResponse.json({ message: "No fields to update." }, { status: 400 });
     }
 
     await dbConnect();
 
+    // Use centralized validators
+    if (typeof username === "string" && username.trim()) {
+      const err = validateUsername(username.trim());
+      if (err) {
+        return NextResponse.json({ message: err }, { status: 400 });
+      }
+      // check uniqueness
+      const trimmedUsername = username.trim().toLowerCase();
+      const existingUser = await User.findOne({ username: trimmedUsername }).lean();
+      if (existingUser && existingUser._id.toString() !== session.user.id) {
+        return NextResponse.json({ message: "Username is already taken" }, { status: 409 });
+      }
+    }
+
+    if (typeof displayName === "string") {
+      const err = validateDisplayName(displayName);
+      if (err) return NextResponse.json({ message: err }, { status: 400 });
+    }
+
+    if (typeof bio === "string") {
+      const err = validateBio(bio);
+      if (err) return NextResponse.json({ message: err }, { status: 400 });
+    }
+
     const update: Record<string, unknown> = {};
+    if (typeof username === "string" && username.trim()) update.username = username.trim().toLowerCase();
     if (typeof displayName === "string") update.displayName = displayName;
     if (typeof bio === "string") update.bio = bio;
     if (typeof image === "string") update.image = image;

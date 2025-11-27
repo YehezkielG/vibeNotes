@@ -1,107 +1,146 @@
-import { Dot, MessageCircle, Share2 } from "lucide-react";
-import Link from "next/link";
-import {
-  getEmojiForLabel,
-  getLabelColor,
-  extractDominantEmotion,
-} from "@/lib/utils/emotionMapping";
-import { formatCreatedAt } from "@/lib/utils/notesLib";
-import Image from "next/image";
-import LikeButton from "@/components/LikeButton";
+"use client";
+
+import { X } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import Portal from "@/components/Portal";
+import PrivateNoteCard from "@/components/PrivateNoteCard";
+import PublicNoteCard from "@/components/PublicNoteCard";
+
+/* VeggieBurgerIcon removed — not used after refactor */
 
 export default function ListNote({ notes }: { notes: NoteType[] }) {
-    const items = notes ?? [];
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [localNotes, setLocalNotes] = useState<NoteType[]>(notes ?? []);
 
-    return (
-      <>
-        {items.map((note, index) => {
-          const dominant = extractDominantEmotion(note.emotion);
-          const emotionLabel = dominant?.label.toLowerCase() ?? "";
+  useEffect(() => {
+    setLocalNotes(notes ?? []);
+  }, [notes]);
+  
+  const items = localNotes;
+  const isYourNotesRoute = Boolean(pathname?.includes("/note/yours/"));
 
-          const badgeColor = getLabelColor(emotionLabel);
-          const badgeIcon = getEmojiForLabel(emotionLabel);
+  const handleDeleteClick = (noteId: string) => {
+    setNoteToDelete(noteId);
+    setShowDeleteModal(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!noteToDelete) return;
+    
+    setDeletingId(noteToDelete);
+    // Optimistic update
+    setLocalNotes(prev => prev.filter(note => note._id !== noteToDelete));
+    setShowDeleteModal(false);
+    
+    try {
+      const res = await fetch(`/api/notes/${noteToDelete}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete note");
+      }
+      router.refresh();
+    } catch (err: unknown) {
+      // Revert optimistic update on error
+      setLocalNotes(notes);
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(msg || "Failed to delete note");
+    } finally {
+      setDeletingId(null);
+      setNoteToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setNoteToDelete(null);
+  };
+
+  return (
+    <>
+      {/* Delete Confirmation Modal rendered to document.body via Portal */}
+      {showDeleteModal && (
+        <Portal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={handleDeleteCancel}>
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Delete Note?</h3>
+                <button onClick={handleDeleteCancel} className="text-gray-400 hover:text-gray-600">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-gray-600 mb-6">Are you sure you want to delete this note? This action cannot be undone.</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={!!deletingId}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deletingId ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {items.map((note, index) => {
           // author may be id string or populated object
           const authorObj =
             typeof note.author === "string" || !note.author
               ? undefined
               : (note.author as UserProfileType);
 
-          const authorImage = authorObj?.image || "/default-profile.png";
-          const authorUsername = authorObj?.username || "unknown";
-          const authorDisplay = authorObj?.displayName || authorUsername || "Unknown Author";
-
-          const likedBy = Array.isArray(note.likedBy)
-            ? note.likedBy.map((val) => val?.toString?.() ?? "")
-            : [];
-
           const key =
             typeof note._id === "string"
               ? note._id
-              : note._id?.toString?.() ?? `note-skeleton-${index}`;
+              : String(note._id ?? `note-skeleton-${index}`);
 
-          return (
-            <article
+          // Check if current user owns this note
+          const isOwner = Boolean(session?.user?.id && authorObj?._id === session.user.id);
+          
+          // Determine if note is private
+          const isPrivate = !note.isPublic;
+
+          // Handlers untuk edit dan delete
+          const handleEdit = () => {
+            router.push(`/note/${note._id}/edit`);
+          };
+
+          const handleDelete = () => {
+            handleDeleteClick(note._id as string);
+          };
+
+          return isPrivate ? (
+            <PrivateNoteCard
               key={key}
-              className=" transition-shadow border border-transparent rounded-xl bg-white/70 backdrop-blur"
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <Image
-                    src={authorImage}
-                    alt="Author Avatar"
-                    width={30}
-                    height={30}
-                    className="rounded-full mr-3"
-                  />
-                  <span className="font-medium">
-                    <Link href={`/profile/${authorUsername}`}>
-                      {authorDisplay}
-                    </Link>
-                  </span>
-                  <Dot className="mx-2 text-gray-400" size={8} />
-                  <span className="text-xs text-gray-500">
-                    {formatCreatedAt(note.createdAt)}
-                  </span>
-                </div>
-
-                {dominant && (
-                  <span
-                    className="ml-auto inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs text-gray-700 font-medium bg-gray-700/15"
-                    style={{
-                      backgroundColor: `${badgeColor}20`,
-                    }}
-                  >
-                    <span>{badgeIcon}</span>
-                    <span className="capitalize ">{dominant.label}</span>
-                    <span className="opacity-80">
-                      {(dominant.score * 100).toFixed(0)}%
-                    </span>
-                  </span>
-                )}
-              </div>
-
-              <Link href={`/note/${note._id}`}>
-                <h3 className="font-semibold mb-1 mt-2">
-                  {note.title || "(Untitled note)"}
-                </h3>
-                <p className=" text-gray-700 whitespace-pre-wrap mb-2">
-                  {note.content}
-                </p>
-              </Link>
-
-              <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
-                <LikeButton noteId={note._id} likes={note.likes ?? 0} likedBy={likedBy} />
-                <button className="inline-flex items-center gap-1 hover:text-gray-700">
-                  <MessageCircle size={16} />
-                  <span>0</span>
-                </button>
-                <button className="inline-flex items-center gap-1 hover:text-gray-700">
-                  <Share2 size={16} />
-                  <span>Share</span>
-                </button>
-              </div>
-            </article>
+              note={note}
+              showMenu={isYourNotesRoute && isOwner}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ) : (
+            <PublicNoteCard
+              key={key}
+              note={note}
+              showMenu={isYourNotesRoute && isOwner}
+              isOwner={isOwner}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           );
         })}
       </>

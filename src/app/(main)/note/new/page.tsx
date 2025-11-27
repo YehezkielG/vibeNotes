@@ -41,7 +41,7 @@ export default function NewNotePage() {
           {labelEmotion.map((item: { label: string; score: number }) => (
             <div key={item.label} className="group">
               {/* Label & Persentase */}
-              <div className="flex justify-between text-sm mb-1 text-gray-300">
+              <div className="flex justify-between text-sm mb-1 text-gray-700">
                 <span className="flex items-center my-1 gap-2 font-medium capitalize">
                   <span>{getEmojiForLabel(item.label)}</span> {item.label}
                 </span>

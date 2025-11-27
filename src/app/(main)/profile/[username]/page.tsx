@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import {Loader2} from "lucide-react";
+import { transformAvatar } from "@/lib/utils/image";
 import ListNote from "@/components/ListNotes";
 import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
+import AvatarUpload from "@/components/AvatarUpload";
 
 type ProfileStats = { followers: number; following: number; publicNotes: number };
 
@@ -31,7 +32,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [editData, setEditData] = useState({ displayName: "", bio: "", image: "" });
+  const [editData, setEditData] = useState({ username: "", displayName: "", bio: "", image: "" });
   const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -120,14 +121,16 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Profile Header */}
-      <div className="flex items-center pt-5 pb-3">
-        <Image
-          src={user.image || "/default-profile.png"}
-          alt="Profile Picture"
-          width={80}
-          height={80}
-          className="rounded-full"
-        />
+      <div className="flex items-center pb-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden">
+          <Image
+            src={transformAvatar(user.image || "/default-profile.png",80)}
+            alt="Profile Picture"
+            width={80}
+            height={80}
+            className="object-cover w-full h-full"
+          />
+        </div>
         <div className="ml-4">
           <h1 className="text-2xl font-bold">{user.displayName}</h1>
           <p className="text-sm text-gray-600">@{user.username}</p>
@@ -143,7 +146,7 @@ export default function ProfilePage() {
             </span>
           </div>
         </div>
-        {!isOwnProfile && session ? (
+         {!isOwnProfile && session ? (
           <button
             onClick={handleFollowToggle}
             disabled={followPending}
@@ -159,6 +162,7 @@ export default function ProfilePage() {
             <button
               onClick={() => {
                 setEditData({
+                  username: user?.username ?? "",
                   displayName: user?.displayName ?? "",
                   bio: user?.bio ?? "",
                   image: user?.image ?? "",
@@ -213,6 +217,10 @@ export default function ProfilePage() {
                           const data = await res.json();
                           setUser(data.user ?? user);
                           setShowEdit(false);
+                          // Redirect to new username profile if username changed
+                          if (data.user?.username && data.user.username !== username) {
+                            router.push(`/profile/${data.user.username}`);
+                          }
                         } catch (err: any) {
                           console.error(err);
                           setError(err.message || "An error occurred");
@@ -221,20 +229,32 @@ export default function ProfilePage() {
                         }
                       }}
                     >
+                        <div className="mb-4 flex justify-center">
+                          <AvatarUpload
+                            currentAvatar={transformAvatar(editData.image || user.image || "/default-profile.png",120)}
+                            onAvatarChange={(url) => setEditData({ ...editData, image: url })}
+                            showDefaultOption={false}
+                          />
+                        </div>
+
+                      <div className="mb-3">
+                        <label className="block text-sm text-gray-600">Username</label>
+                        <input
+                          value={editData.username}
+                          onChange={(e) => setEditData({ ...editData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                          className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                          placeholder="username"
+                          minLength={3}
+                          maxLength={30}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">Lowercase letters, numbers, and underscores only</p>
+                      </div>
+
                       <div className="mb-3">
                         <label className="block text-sm text-gray-600">Display name</label>
                         <input
                           value={editData.displayName}
                           onChange={(e) => setEditData({ ...editData, displayName: e.target.value })}
-                          className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="block text-sm text-gray-600">Avatar image URL</label>
-                        <input
-                          value={editData.image}
-                          onChange={(e) => setEditData({ ...editData, image: e.target.value })}
                           className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
                         />
                       </div>

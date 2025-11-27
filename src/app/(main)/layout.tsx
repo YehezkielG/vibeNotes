@@ -24,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased px-2 mainBody sm:px-32`}>
+      <body className={`${inter.variable} antialiased px-2 mainBody sm:px-32 bg-white text-gray-800`}>
         <AuthSessionProvider>
           <div className="flex relative">
             <aside className="sticky top-0 h-svh w-3/12 pr-8 hidden lg:block overflow-y-auto">

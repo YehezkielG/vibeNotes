@@ -7,9 +7,6 @@ import sanitizeHtml from "sanitize-html";
 import mongoose from "mongoose";
 import User from "@/models/User";
 
-// =======================
-// POST: CREATE NOTE
-// =======================
 export async function POST(request: Request) {
     try {
         const session = await auth();

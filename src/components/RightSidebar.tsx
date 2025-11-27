@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { transformAvatar } from "@/lib/utils/image";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -11,7 +12,7 @@ export default function RightSidebar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [loadedImageSrc, setLoadedImageSrc] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const profileImageSrc = session?.user?.image || "/default-profile.png";
+  const profileImageSrc = transformAvatar(session?.user?.image || "/default-profile.png", 80);
   const isImageLoading = loadedImageSrc !== profileImageSrc;
 
   // Close dropdown when clicking outside
@@ -37,7 +38,7 @@ export default function RightSidebar() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDropdown]);
+  }, [showDropdown, session?.user?.isOnboarded]);
 
     return <header className="flex items-center justify-end my-5">
       <div className="relative flex items-center">
@@ -47,39 +48,39 @@ export default function RightSidebar() {
               onClick={() => setShowDropdown((v) => !v)}
               className="focus:outline-none"
             >
-              <div className="relative">
+              <div className="relative w-10 h-10">
                 {isImageLoading && (
                   <div className="w-10 h-10 rounded-full border-2 border-gray-300 animate-pulse bg-gray-200" />
                 )}
-                <Image
-                  src={profileImageSrc}
-                  className={`rounded-full border-2 cursor-pointer transition-opacity ${
-                    isImageLoading ? "opacity-0" : "opacity-100"
-                  }`}
-                  alt="Profile picture"
-                  width={40}
-                  height={40}
-                  onLoadingComplete={() => setLoadedImageSrc(profileImageSrc)}
-                />
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <Image
+                    src={transformAvatar(profileImageSrc,40)}
+                    alt="Profile picture"
+                    width={40}
+                    height={40}
+                    className="object-cover w-full h-full"
+                    onLoadingComplete={() => setLoadedImageSrc(profileImageSrc)}
+                  />
+                </div>
               </div>
             </button>
             {showDropdown && (
-              <div className="absolute right-0 rounded-lg bg-white border shadow-lg p-3 py-5">
+              <div className="absolute right-0 rounded-lg bg-white border border-gray-300 shadow-lg p-3 py-5">
                 <div className="flex items-center justify-center mb-3">
                   <div className="relative">
                     {isImageLoading && (
                       <div className="w-12 h-12 rounded-full border-2 border-gray-300 animate-pulse bg-gray-200" />
                     )}
-                    <Image
-                      src={profileImageSrc}
-                      className={`rounded-full border-2 transition-opacity ${
-                        isImageLoading ? "opacity-0" : "opacity-100"
-                      }`}
-                      alt="Profile picture"
-                      width={50}
-                      height={50}
-                      onLoadingComplete={() => setLoadedImageSrc(profileImageSrc)}
-                    />
+                    <div className="w-12 h-12 rounded-full overflow-hidden">
+                      <Image
+                        src={transformAvatar(profileImageSrc,50)}
+                        alt="Profile picture"
+                        width={50}
+                        height={50}
+                        className="object-cover w-full h-full"
+                        onLoadingComplete={() => setLoadedImageSrc(profileImageSrc)}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div

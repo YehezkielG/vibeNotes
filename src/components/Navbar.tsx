@@ -23,7 +23,7 @@ export default function Navbar() {
             <div className="container mx-auto">
                       <div className="flex items-center space-x-3 my-5">
                         <Image src="/logo.png" alt="Notes App Logo" width={25} height={25} />
-                        <h1 className="font-bold text-xl">vibeNote</h1>
+                        <h1 className="font-bold text-xl">vibeNotes</h1>
                     </div>
                 <ul className="text-lg font-medium">
                     {navItems.map((item) => {

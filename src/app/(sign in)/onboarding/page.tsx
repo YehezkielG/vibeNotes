@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { redirect } from "next/navigation";
 import type { IUser } from "@/models/User";
+import AvatarUpload from "@/components/AvatarUpload";
 
 // This is your "Edit Profile" page at /profile/me
 // It is displayed INSIDE the main layout (with Sidebar)
@@ -19,6 +19,7 @@ export default function EditProfilePage() {
   const [displayName, setDisplayName] = useState(session?.user?.name || "");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+  const [avatar, setAvatar] = useState(session?.user?.image || "");
   const [errInput, setErrInput] = useState<{
     username?: string;
     displayName?: string;
@@ -52,7 +53,7 @@ export default function EditProfilePage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, displayName, bio }),
+      body: JSON.stringify({ username, displayName, bio, image: avatar }),
     });
     const data = await res.json();
     if (res.status !== 200) {
@@ -87,19 +88,16 @@ export default function EditProfilePage() {
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       <div className="flex flex-col items-center mb-6">
-        {session?.user?.image && (
-          <Image
-            src={session.user.image}
-            alt="Profile Picture"
-            width={75}
-            height={75}
-            className="rounded-full mb-2"
-          />
-        )}
+        <AvatarUpload
+          currentAvatar={avatar}
+          onAvatarChange={setAvatar}
+          defaultAvatar={session?.user?.image || ""}
+          showDefaultOption={true}
+        />
         <h2 className="text-center text-xl font-bold text-gray-800">
           Wellcome To vibeNotes
         </h2>
-        <p>Complete your profile to get started.</p>
+        <p className="text-sm">Complete your profile to get started.</p>
       </div>
 
       <form onSubmit={handleProfileSubmit} className="space-y-5">

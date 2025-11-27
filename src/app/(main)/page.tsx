@@ -109,27 +109,22 @@ export default function ExplorePage() {
     };
   }, [activeTab, fetchNotes]);
 
-  const loadMore = useCallback(async () => {
-    if (loading || loadingMore || !hasMore) return;
-    try {
-      setLoadingMore(true);
-      await fetchNotes(notes.length, true);
-    } catch (err: any) {
-      setError(err.message || "Failed to load more notes.");
-      setHasMore(false);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [fetchNotes, hasMore, loading, loadingMore, notes.length]);
-
   useEffect(() => {
     const target = loaderRef.current;
     if (!target) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          loadMore();
+        if (entries[0]?.isIntersecting && !loadingMore && hasMore && !loading) {
+          setLoadingMore(true);
+          fetchNotes(notes.length, true)
+            .catch((err: any) => {
+              setError(err.message || "Failed to load more notes.");
+              setHasMore(false);
+            })
+            .finally(() => {
+              setLoadingMore(false);
+            });
         }
       },
       { rootMargin: "120px" },
@@ -137,7 +132,7 @@ export default function ExplorePage() {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [loadMore, hasMore, notes.length]);
+  }, [fetchNotes, hasMore, loading, loadingMore, notes.length]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -187,13 +182,15 @@ export default function ExplorePage() {
                     key={user._id}
                     href={`/profile/${user.username}`}
                     className="flex items-center gap-3 rounded-xl border border-transparent bg-white/70 backdrop-blur transition-shadow">
-                    <Image
-                      src={user.image || "/default-profile.png"}
-                      alt={user.displayName}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <Image
+                        src={user.image || "/default-profile.png"}
+                        alt={user.displayName}
+                        width={40}
+                        height={40}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
                     <div>
                       <p className="font-medium">{user.displayName}</p>
                       <p className="text-xs text-gray-500">@{user.username}</p>
@@ -232,8 +229,8 @@ export default function ExplorePage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                     active
-                      ? "border-black bg-black text-white"
-                      : "border-gray-300 text-gray-600 hover:border-black hover:text-black"
+                      ? "border-gray-700 bg-gray-700 text-white"
+                      : "border-gray-300 text-gray-600 hover:border-gray-700 hover:text-gray-700"
                   }`}
                   aria-pressed={active}
                 >
@@ -254,8 +251,8 @@ export default function ExplorePage() {
               <div className="space-y-10">
                 <ListNote notes={notes} />
               </div>
-              <div ref={loaderRef} className="h-8 w-full" />
-              {loadingMore && <NoteCardSkeleton count={1} />}
+              <div ref={loaderRef} className="w-full" />
+              {loadingMore && <NoteCardSkeleton count={3} />}
               {!hasMore && (
                 <p className="text-center text-xs text-gray-400">
                   You’re all caught up.
