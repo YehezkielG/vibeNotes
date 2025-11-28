@@ -24,16 +24,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased px-2 mainBody sm:px-32 bg-white text-gray-800`}>
+      <body className={`${inter.variable} antialiased  px-2 mainBody bg-white text-gray-800`}>
         <AuthSessionProvider>
-          <div className="flex relative">
-            <aside className="sticky top-0 h-svh w-3/12 pr-8 hidden lg:block overflow-y-auto">
+          <div className="flex justify-between px-10 relative">
+            <aside className="sticky top-0 h-svh w-2/12 hidden lg:block overflow-y-auto">
               <Navbar />
             </aside>
-            <main className="w-full p-5">
+            <main className="w-7/12 p-5 ">
               {children}
             </main>
-            <aside className="sticky top-0 h-svh w-3/12 pl-8">
+            <aside className="sticky top-0 h-svh w-2/12 ">
               <RightSidebar />
               <div className="absolute bottom-0" style={{
                 fontSize:"10px"

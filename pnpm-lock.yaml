@@ -11,6 +11,9 @@ importers:
       '@auth/mongodb-adapter':
         specifier: ^3.11.1
         version: 3.11.1(mongodb@7.0.0)
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
       '@huggingface/hub':
         specifier: ^2.7.0
         version: 2.7.0
@@ -270,6 +273,10 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@google/generative-ai@0.24.1':
+    resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
 
   '@huggingface/hub@2.7.0':
     resolution: {integrity: sha512-0SOyw7LQQKLyA+ZdDTpk93Q/L18FFi66Tyd5pKSSn8iTapm25eatqLt85KOfhrj/1zMIu9yMSPte8wIL0E+/tw==}
@@ -2906,6 +2913,8 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@google/generative-ai@0.24.1': {}
 
   '@huggingface/hub@2.7.0':
     dependencies:

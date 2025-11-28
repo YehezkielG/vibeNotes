@@ -31,7 +31,7 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [fontSize, setFontSize] = useState("14px");
   const editorFontFamily = "var(--font-inter), 'Inter', sans-serif";
-  const editorMinHeight = focusMode ? "calc(100vh - 320px)" : "60vh";
+  const editorMinHeight = focusMode ? "calc(100vh - 50vh)" : "60vh";
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const undoTimeout = useRef<NodeJS.Timeout | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
@@ -42,6 +42,21 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
   const [titleHint, setTitleHint] = useState<string | null>(null);
   const [showTitleBanner, setShowTitleBanner] = useState(false);
   const [showSuggestTooltip, setShowSuggestTooltip] = useState(false);
+  const [includeCounselor, setIncludeCounselor] = useState(false);
+  const [counselorAdvice, setCounselorAdvice] = useState<string | null>(null);
+  const [showCounselorModal, setShowCounselorModal] = useState(false);
+  const [savedNoteId, setSavedNoteId] = useState<string | null>(null);
+  const counselorRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll to counselor panel when advice arrives
+  useEffect(() => {
+    if (showCounselorModal && counselorAdvice && counselorRef.current) {
+      // scroll smoothly to the panel
+      counselorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      // give focus for a11y
+      (counselorRef.current as HTMLDivElement).focus?.();
+    }
+  }, [showCounselorModal, counselorAdvice]);
 
   // load draft from localStorage on mount
   useEffect(() => {
@@ -230,13 +245,22 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
       const response = await fetch("/api/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, isPublic }),
+        body: JSON.stringify({ title, content, isPublic, includeCounselor }),
       });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data?.message || "Failed to save the note.");
       }
       analyzeEmotion(data?.note?.emotion ?? []);
+
+      // Show counselor advice if it was generated and keep the saved note id
+      if (data?.note) {
+        setSavedNoteId(String(data.note._id || data.note.id || ""));
+      }
+      if (data?.note?.counselorAdvice) {
+        setCounselorAdvice(data.note.counselorAdvice);
+        setShowCounselorModal(true);
+      }
 
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(LOCAL_DRAFT_KEY);
@@ -554,17 +578,66 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
 
         {error && <p className="text-black text-sm">{error}</p>}
 
-        <div className="mb-5 flex justify-end">
-          <button
-            type="submit"
-            className="py-3 px-4 rounded-xl border border-black bg-transparent text-sm font-semibold text-black hover:bg-black/5 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            disabled={isLoading}
-          >
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-black" />}
-            <span>{isLoading ? "Saving..." : "✨ Save & Analyze"}</span>
-          </button>
+        <div className="mb-5 flex items-center justify-between">
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeCounselor}
+              onChange={(e) => setIncludeCounselor(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="flex items-center gap-1.5">
+              <Sparkles size={14} className="text-indigo-500" />
+              Ask AI Counselor for advice
+            </span>
+          </label>
+          <div>
+            <button
+              type="submit"
+              className="py-3 px-4 rounded-xl border border-black bg-transparent text-sm font-semibold text-black hover:bg-black/5 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              disabled={isLoading}
+            >
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin text-black" />}
+              <span>{isLoading ? "Saving..." : "✨ Save & Analyze"}</span>
+            </button>
+          </div>
         </div>
       </form>
+
+      {/* AI Counselor Panel (appears at the bottom and auto-scrolls into view) */}
+      {showCounselorModal && counselorAdvice && (
+        <div
+          ref={counselorRef}
+          tabIndex={-1}
+          className="mt-6 rounded-xl p-4 bg-linear-to-br from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm"
+        >
+          <div className="flex items-start gap-4">
+            <div className="shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center">
+              <span className="text-xl">🌿</span>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-indigo-900 mb-1">AI Counselor Reflection</h4>
+              <p className="text-sm text-gray-700 leading-relaxed italic mb-4">{counselorAdvice}</p>
+              <div className="flex items-center gap-3">
+                {savedNoteId ? (
+                  <button
+                    onClick={() => router.push(`/note/${savedNoteId}`)}
+                    className="text-indigo-600 text-sm font-medium hover:underline"
+                  >
+                    View this note
+                  </button>
+                ) : null}
+                <button
+                  onClick={() => setShowCounselorModal(false)}
+                  className="text-sm text-gray-600 hover:bg-gray-100 px-3 py-1 rounded"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

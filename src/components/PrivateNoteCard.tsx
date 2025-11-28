@@ -1,19 +1,15 @@
 "use client";
 
-import { Lock, Calendar, Edit, Trash2, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { Lock, Calendar, MessageCircle, Dot } from "lucide-react";
+/* no client state needed for simplified card */
 import Link from "next/link";
 import { getEmojiForLabel, extractDominantEmotion } from "@/lib/utils/emotionMapping";
 
 interface PrivateNoteCardProps {
   note: NoteType;
-  showMenu?: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
 }
 
-export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: PrivateNoteCardProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
+export default function PrivateNoteCard({ note }: PrivateNoteCardProps) {
   const dominant = extractDominantEmotion(note.emotion);
   const emotionLabel = dominant?.label.toLowerCase() ?? "";
   const moodEmoji = getEmojiForLabel(emotionLabel);
@@ -79,78 +75,43 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
       </Link>
 
       {/* Timestamp & Reflections Counter */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+      <div className="flex items-center mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
         <div className="flex items-center gap-2">
           <Calendar size={14} className="text-gray-400" />
           <time dateTime={note.createdAt}>{timeDisplay}</time>
         </div>
         {note.responses && note.responses.length > 0 && (
+          <>
+            <Dot />
           <div className="flex items-center gap-1.5 text-gray-600">
             <MessageCircle size={14} className="text-gray-400" />
             <span className="text-xs font-medium">
               {note.responses.length} {note.responses.length === 1 ? 'Reflection' : 'Reflections'}
             </span>
           </div>
+          </>
         )}
       </div>
 
-      {/* Owner menu: keep edit/delete inside a menu for privacy */}
-      {showMenu && (
-        <div className="absolute bottom-4 right-4">
-          <div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMenuOpen((v) => !v);
-                }}
-                aria-haspopup="true"
-                aria-expanded={menuOpen}
-                className="p-2 rounded-full bg-white/60 hover:bg-white text-gray-600 shadow-sm"
-              >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="6" r="1.5" fill="currentColor" />
-                <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-                <circle cx="12" cy="18" r="1.5" fill="currentColor" />
-              </svg>
-            </button>
-
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 bottom-7 z-20 w-36 bg-white rounded-lg shadow-lg border border-gray-100 py-1">
-                  {onEdit && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setMenuOpen(false);
-                        onEdit();
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                    >
-                      <Edit size={14} />
-                      <span>Edit</span>
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setMenuOpen(false);
-                        onDelete();
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                    >
-                      <Trash2 size={14} />
-                      <span>Delete</span>
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+      {/* AI Counselor preview (appear below emotion/timestamp) */}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {((note as any)?.counselorAdvice as string | null) && (() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const advice = ((note as any).counselorAdvice as string) || "";
+        const short = advice.length > 160 ? advice.slice(0, 160) + "…" : advice;
+        return (
+          <div className="mt-4 p-3 rounded-lg bg-indigo-50 border border-indigo-100">
+            <div className="text-sm text-gray-800 italic mb-2">{short}</div>
+            <div className="flex items-center justify-end">
+              <Link href={`/note/${note._id}`} className="text-xs font-medium text-indigo-600 hover:underline">
+                View note
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* Simplified: no edit/delete menu to keep entries feeling private and personal */}
     </article>
   );
 }

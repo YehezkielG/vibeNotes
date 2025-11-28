@@ -407,6 +407,168 @@ export async function PATCH(
         });
       }
 
+      case "delete-response": {
+        if (
+          typeof responseIndex !== "number" ||
+          !note.responses[responseIndex]
+        ) {
+          return NextResponse.json(
+            { error: "Invalid response index" },
+            { status: 400 }
+          );
+        }
+
+        const response = note.responses[responseIndex];
+        
+        // Check if user is the author
+        if (response.author.toString() !== userId) {
+          return NextResponse.json(
+            { error: "You can only delete your own responses" },
+            { status: 403 }
+          );
+        }
+
+        // Check 10-minute time limit
+        const createdAt = response.createdAt || new Date(0);
+        const now = new Date();
+        const minutesElapsed = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+        
+        if (minutesElapsed > 10) {
+          return NextResponse.json(
+            { error: "Can only delete responses within 10 minutes of creation" },
+            { status: 403 }
+          );
+        }
+
+        // Remove the response
+        note.responses.splice(responseIndex, 1);
+        await note.save();
+
+        // Return note with populated response/reply authors (manual populate)
+        const noteObjAfterDel: any = note.toObject();
+        const userIdsAfterDel = new Set<string>();
+        noteObjAfterDel.responses.forEach((r: any) => {
+          if (r?.author) userIdsAfterDel.add(r.author.toString());
+          if (Array.isArray(r.replies)) {
+            r.replies.forEach((rep: any) => {
+              if (rep?.author) userIdsAfterDel.add(rep.author.toString());
+            });
+          }
+        });
+
+        if (userIdsAfterDel.size > 0) {
+          const User = (await import("@/models/User")).default;
+          const users = await User.find({ _id: { $in: Array.from(userIdsAfterDel) } }).select(
+            "username displayName image"
+          ).lean();
+          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
+
+          noteObjAfterDel.responses = noteObjAfterDel.responses.map((r: any) => ({
+            ...r,
+            likedBy: Array.isArray(r.likedBy)
+              ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
+              : [],
+            author: map.get(r.author?.toString?.()) || r.author,
+            replies: Array.isArray(r.replies)
+              ? r.replies.map((rep: any) => ({
+                  ...rep,
+                  likedBy: Array.isArray(rep.likedBy)
+                    ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
+                    : [],
+                  author: map.get(rep.author?.toString?.()) || rep.author,
+                }))
+              : r.replies,
+          }));
+        }
+
+        return NextResponse.json({
+          message: "Response deleted",
+          note: noteObjAfterDel,
+        });
+      }
+
+      case "delete-reply": {
+        if (
+          typeof responseIndex !== "number" ||
+          typeof replyIndex !== "number" ||
+          !note.responses[responseIndex] ||
+          !note.responses[responseIndex].replies[replyIndex]
+        ) {
+          return NextResponse.json(
+            { error: "Invalid response or reply index" },
+            { status: 400 }
+          );
+        }
+
+        const reply = note.responses[responseIndex].replies[replyIndex];
+        
+        // Check if user is the author
+        if (reply.author.toString() !== userId) {
+          return NextResponse.json(
+            { error: "You can only delete your own replies" },
+            { status: 403 }
+          );
+        }
+
+        // Check 10-minute time limit
+        const createdAt = reply.createdAt || new Date(0);
+        const now = new Date();
+        const minutesElapsed = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+        
+        if (minutesElapsed > 10) {
+          return NextResponse.json(
+            { error: "Can only delete replies within 10 minutes of creation" },
+            { status: 403 }
+          );
+        }
+
+        // Remove the reply
+        note.responses[responseIndex].replies.splice(replyIndex, 1);
+        await note.save();
+
+        // Return note with populated response/reply authors (manual populate)
+        const noteObjAfterReplyDel: any = note.toObject();
+        const userIdsAfterReplyDel = new Set<string>();
+        noteObjAfterReplyDel.responses.forEach((r: any) => {
+          if (r?.author) userIdsAfterReplyDel.add(r.author.toString());
+          if (Array.isArray(r.replies)) {
+            r.replies.forEach((rep: any) => {
+              if (rep?.author) userIdsAfterReplyDel.add(rep.author.toString());
+            });
+          }
+        });
+
+        if (userIdsAfterReplyDel.size > 0) {
+          const User = (await import("@/models/User")).default;
+          const users = await User.find({ _id: { $in: Array.from(userIdsAfterReplyDel) } }).select(
+            "username displayName image"
+          ).lean();
+          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
+
+          noteObjAfterReplyDel.responses = noteObjAfterReplyDel.responses.map((r: any) => ({
+            ...r,
+            likedBy: Array.isArray(r.likedBy)
+              ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
+              : [],
+            author: map.get(r.author?.toString?.()) || r.author,
+            replies: Array.isArray(r.replies)
+              ? r.replies.map((rep: any) => ({
+                  ...rep,
+                  likedBy: Array.isArray(rep.likedBy)
+                    ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
+                    : [],
+                  author: map.get(rep.author?.toString?.()) || rep.author,
+                }))
+              : r.replies,
+          }));
+        }
+
+        return NextResponse.json({
+          message: "Reply deleted",
+          note: noteObjAfterReplyDel,
+        });
+      }
+
       default:
         return NextResponse.json(
           { error: "Invalid action" },

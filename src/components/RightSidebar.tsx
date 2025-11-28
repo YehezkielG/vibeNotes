@@ -1,124 +1,53 @@
 "use client";
 import Image from "next/image";
 import { transformAvatar } from "@/lib/utils/image";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { User as UserIcon, LogOut } from "lucide-react";
-import { redirect } from "next/navigation";
+import { /* icons intentionally removed from sidebar */ } from "lucide-react";
+
+type Suggestion = {
+  _id: string;
+  username: string;
+  displayName: string;
+  image?: string;
+  isFollowing?: boolean;
+};
 
 export default function RightSidebar() {
   const { data: session, status } = useSession();
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [loadedImageSrc, setLoadedImageSrc] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const profileImageSrc = transformAvatar(session?.user?.image || "/default-profile.png", 80);
-  const isImageLoading = loadedImageSrc !== profileImageSrc;
+  // Sidebar no longer renders the avatar dropdown (moved to Navbar)
+  const [suggestions, setSuggestions] = useState<{ newest: Suggestion[]; recent: Suggestion[] } | null>(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  // Close dropdown when clicking outside
+  // Sidebar no longer manages a profile dropdown; avatar and profile actions moved to the Navbar.
+
+  // Fetch follow suggestions (newest users + recent public authors)
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowDropdown(false);
+    let mounted = true;
+    async function load() {
+      setLoadingSuggestions(true);
+      try {
+        const res = await fetch(`/api/suggestions`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setSuggestions({ newest: data.newest || [], recent: data.recent || [] });
+      } catch (err) {
+        console.warn("Failed to load suggestions", err);
+      } finally {
+        if (mounted) setLoadingSuggestions(false);
       }
     }
-
-    if (!showDropdown) {
-      return;
-    }
-
-    if(!session?.user?.isOnboarded){
-      redirect('/onboarding');
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
+    load();
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      mounted = false;
     };
-  }, [showDropdown, session?.user?.isOnboarded]);
+  }, []);
 
     return <header className="flex items-center justify-end my-5">
-      <div className="relative flex items-center">
-        {status === "loading" ? null : session ? (
-          <div ref={dropdownRef} className="relative">
-            <button
-              onClick={() => setShowDropdown((v) => !v)}
-              className="focus:outline-none"
-            >
-              <div className="relative w-10 h-10">
-                {isImageLoading && (
-                  <div className="w-10 h-10 rounded-full border-2 border-gray-300 animate-pulse bg-gray-200" />
-                )}
-                <div className="w-10 h-10 rounded-full overflow-hidden">
-                  <Image
-                    src={transformAvatar(profileImageSrc,40)}
-                    alt="Profile picture"
-                    width={40}
-                    height={40}
-                    className="object-cover w-full h-full"
-                    onLoadingComplete={() => setLoadedImageSrc(profileImageSrc)}
-                  />
-                </div>
-              </div>
-            </button>
-            {showDropdown && (
-              <div className="absolute right-0 rounded-lg bg-white border border-gray-300 shadow-lg p-3 py-5">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="relative">
-                    {isImageLoading && (
-                      <div className="w-12 h-12 rounded-full border-2 border-gray-300 animate-pulse bg-gray-200" />
-                    )}
-                    <div className="w-12 h-12 rounded-full overflow-hidden">
-                      <Image
-                        src={transformAvatar(profileImageSrc,50)}
-                        alt="Profile picture"
-                        width={50}
-                        height={50}
-                        className="object-cover w-full h-full"
-                        onLoadingComplete={() => setLoadedImageSrc(profileImageSrc)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="px-4 py-2 border-b mb-2 mx-2 text-center"
-                  style={{
-                    width: `${Math.max(
-                      (session.user?.displayName?.length || 4) * 17,
-                      160
-                    )}px`,
-                  }}
-                >
-                  <p className="font-semibold text-gray-700">
-                    Hello, {session.user?.displayName || "User"}
-                  </p>
-                </div>
-                <Link
-                  href={`/profile/${session.user?.username}`}
-                  className="flex items-center gap-2 hover:bg-gray-100 p-2"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  <UserIcon size={16} className="text-gray-600" />
-                  <span>My Profile</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    setShowDropdown(false);
-                    signOut();
-                  }}
-                  className="w-full text-left p-2 hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <LogOut size={16} className="text-gray-600" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            )}
-          </div>
-        
-        ) : (
+      <div className="">
+        {status === "loading" ? null : session ? null : (
           <Link
             className="border-2 border-indigo-500 focus:bg-indigo-500 focus:text-black text-indigo-500 px-4 py-1 rounded-xl"
             href="/auth"
@@ -127,5 +56,76 @@ export default function RightSidebar() {
           </Link>
         )}
       </div>
+      {/* Follow suggestions */}
+      {suggestions && (
+        <aside className="">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Suggested for you</h4>
+          <div className="space-y-3">
+            {/* Prefer recent public authors first, then newest users (unique) */}
+            {[...suggestions.recent, ...suggestions.newest]
+              .reduce((acc: Suggestion[], cur) => {
+                if (!acc.find((a) => a._id === cur._id)) acc.push(cur);
+                return acc;
+              }, [])
+              .slice(0, 5)
+                .map((s) => (
+                <div key={s._id} className="flex items-center justify-between gap-3">
+                  <Link href={`/profile/${s.username}`} className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full overflow-hidden">
+                      <Image
+                        src={transformAvatar(s.image || "/default-profile.png", 40)}
+                        alt={s.username}
+                        width={36}
+                        height={36}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <div className="text-xs min-w-0">
+                      <div className="font-semibold text-gray-800 truncate max-w-40" title={s.displayName}>{s.displayName}</div>
+                      <div className="text-gray-500 truncate max-w-40" title={`@${s.username}`}>@{s.username}</div>
+                    </div>
+                  </Link>
+                  <FollowButton username={s.username} initialFollowing={!!s.isFollowing} onToggle={(isFollowing) => {
+                    // quick local update
+                    setSuggestions((prev) => {
+                      if (!prev) return prev;
+                      const update = (arr: Suggestion[]) => arr.map(u => u._id === s._id ? { ...u, isFollowing } : u);
+                      return { newest: update(prev.newest), recent: update(prev.recent) };
+                    });
+                  }} />
+                </div>
+              ))}
+          </div>
+        </aside>
+      )}
     </header>
+}
+
+function FollowButton({ username, initialFollowing, onToggle }: { username: string; initialFollowing?: boolean; onToggle?: (v: boolean) => void }) {
+  const [isFollowing, setIsFollowing] = useState<boolean>(!!initialFollowing);
+  const [loading, setLoading] = useState(false);
+  const handleClick = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const method = isFollowing ? "DELETE" : "POST";
+      const res = await fetch(`/api/profile/${username}/follow`, { method });
+      if (!res.ok) throw new Error("Failed");
+      setIsFollowing(!isFollowing);
+      onToggle?.(!isFollowing);
+    } catch (err) {
+      console.warn("Follow toggle failed", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className={`text-xs font-medium px-3 py-1 rounded-lg ${isFollowing ? 'bg-gray-200 text-gray-700' : 'bg-indigo-600 text-white'}`}
+    >
+      {isFollowing ? 'Following' : 'Follow'}
+    </button>
+  );
 }

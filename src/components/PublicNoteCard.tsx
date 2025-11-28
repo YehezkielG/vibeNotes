@@ -19,6 +19,7 @@ interface PublicNoteCardProps {
   isOwner?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  hideMeta?: boolean;
 }
 
 export default function PublicNoteCard({
@@ -27,6 +28,7 @@ export default function PublicNoteCard({
   isOwner,
   onEdit,
   onDelete,
+  hideMeta = false,
 }: PublicNoteCardProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -78,10 +80,14 @@ export default function PublicNoteCard({
               {authorDisplay}
             </Link>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>@{authorUsername}</span>
-              <span>•</span>
+              {!hideMeta && (
+                <>
+                  <span>@{authorUsername}</span>
+                  <span>•</span>
+                </>
+              )}
               <span>{formatCreatedAt(note.createdAt)}</span>
-              <Globe size={14} className="text-gray-400 float-right" />
+              {!hideMeta && <Globe size={14} className="text-gray-400 float-right" />}
             </div>
           </div>
         </div>

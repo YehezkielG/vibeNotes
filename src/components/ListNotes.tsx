@@ -140,6 +140,7 @@ export default function ListNote({ notes }: { notes: NoteType[] }) {
               isOwner={isOwner}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              hideMeta={true}
             />
           );
         })}

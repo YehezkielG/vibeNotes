@@ -75,6 +75,7 @@ likes: {
 }
 ,
     responses: { type: [NoteResponseSchema], default: [] },
+    counselorAdvice: { type: String, default: null },
   },
   { timestamps: true },
 );
