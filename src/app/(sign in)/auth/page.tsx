@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { validateEmail } from "@/lib/utils/validator";
 import { useSession, signIn } from "next-auth/react";
 import { redirect } from "next/navigation";
+import AuthSkeleton from "@/components/skeletons/AuthSkeleton";
 
 
 export default function Form() {
@@ -18,15 +19,7 @@ export default function Form() {
   if (session.status === "authenticated") {
     redirect("/");
   } else if (session.status === "loading") {
-    // Spinner while session is loading
-    return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <span
-          className="inline-block h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"
-          aria-label="Loading"
-        />
-      </div>
-    );
+    return <AuthSkeleton />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

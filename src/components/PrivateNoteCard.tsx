@@ -1,15 +1,19 @@
 "use client";
 
-import { Lock, Calendar, MessageCircle, Dot } from "lucide-react";
-/* no client state needed for simplified card */
+import { Lock, Calendar, MessageCircle, Dot, Trash2, Edit2 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { getEmojiForLabel, extractDominantEmotion } from "@/lib/utils/emotionMapping";
 
 interface PrivateNoteCardProps {
   note: NoteType;
+  showMenu?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function PrivateNoteCard({ note }: PrivateNoteCardProps) {
+export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: PrivateNoteCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const dominant = extractDominantEmotion(note.emotion);
   const emotionLabel = dominant?.label.toLowerCase() ?? "";
   const moodEmoji = getEmojiForLabel(emotionLabel);
@@ -43,21 +47,25 @@ export default function PrivateNoteCard({ note }: PrivateNoteCardProps) {
           <Lock size={16} className="shrink-0 text-gray-400" />
           <span className="text-xs font-medium uppercase tracking-wide">Private Journal</span>
         </div>
-        
-        {/* Mood Tag (Small & Subtle) */}
-        {dominant && (
-          <div 
-            className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs border"
-            style={{ 
-              backgroundColor: `#fafafa`,
-              borderColor: `#ececec`,
-              color: `#6b7280`
-            }}
-          >
-            <span className="text-sm">{moodEmoji}</span>
-            <span className="font-medium capitalize">Mood: {dominant.label}</span>
-          </div>
-        )}
+
+        <div className="flex items-center gap-3">
+          {/* Mood Tag (Small & Subtle) */}
+          {dominant && (
+            <div 
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs border"
+              style={{ 
+                backgroundColor: `#fafafa`,
+                borderColor: `#ececec`,
+                color: `#6b7280`
+              }}
+            >
+              <span className="text-sm">{moodEmoji}</span>
+              <span className="font-medium capitalize">Mood: {dominant.label}</span>
+            </div>
+          )}
+
+          {/* Action menu moved to header (top-right) */}
+        </div>
       </div>
 
       {/* Title - Serif Font untuk Journal Feel */}
@@ -75,8 +83,9 @@ export default function PrivateNoteCard({ note }: PrivateNoteCardProps) {
       </Link>
 
       {/* Timestamp & Reflections Counter */}
-      <div className="flex items-center mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+        <div className="flex items-center">
+          <div className="flex items-center gap-2">
           <Calendar size={14} className="text-gray-400" />
           <time dateTime={note.createdAt}>{timeDisplay}</time>
         </div>
@@ -91,27 +100,58 @@ export default function PrivateNoteCard({ note }: PrivateNoteCardProps) {
           </div>
           </>
         )}
+        </div>
+        <div className="absolute bottom-2 right-4">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setMenuOpen(!menuOpen);
+            }}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="6" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="18" r="1.5" fill="currentColor" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 bottom-7 z-20 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                {/* Private notes can always be edited by owner */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    onEdit ? onEdit() : null;
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <Edit2 size={14} className="text-blue-600" />
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    onDelete ? onDelete() : null;
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                >
+                  <Trash2 size={14} />
+                  <span>Delete</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
+      {/* Modal handled by parent `ListNotes` via Portal when onDelete is used. */}
 
-      {/* AI Counselor preview (appear below emotion/timestamp) */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {((note as any)?.counselorAdvice as string | null) && (() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const advice = ((note as any).counselorAdvice as string) || "";
-        const short = advice.length > 160 ? advice.slice(0, 160) + "…" : advice;
-        return (
-          <div className="mt-4 p-3 rounded-lg bg-indigo-50 border border-indigo-100">
-            <div className="text-sm text-gray-800 italic mb-2">{short}</div>
-            <div className="flex items-center justify-end">
-              <Link href={`/note/${note._id}`} className="text-xs font-medium text-indigo-600 hover:underline">
-                View note
-              </Link>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Simplified: no edit/delete menu to keep entries feeling private and personal */}
+      {/* AI counselor text removed per request; actions moved to header. */}
     </article>
   );
 }

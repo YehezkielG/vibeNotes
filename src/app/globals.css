@@ -51,3 +51,13 @@ body {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Global shimmer keyframes for skeletons */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer {
+  animation: shimmer 1.6s linear infinite;
+}

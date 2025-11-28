@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { /* icons intentionally removed from sidebar */ } from "lucide-react";
+import SuggestionsSkeleton from "@/components/skeletons/SuggestionsSkeleton";
 
 type Suggestion = {
   _id: string;
@@ -46,18 +47,11 @@ export default function RightSidebar() {
   }, []);
 
     return <header className="flex items-center justify-end my-5">
-      <div className="">
-        {status === "loading" ? null : session ? null : (
-          <Link
-            className="border-2 border-indigo-500 focus:bg-indigo-500 focus:text-black text-indigo-500 px-4 py-1 rounded-xl"
-            href="/auth"
-          >
-            Sign In
-          </Link>
-        )}
-      </div>
+
       {/* Follow suggestions */}
-      {suggestions && (
+      {loadingSuggestions ? (
+        <SuggestionsSkeleton />
+      ) : suggestions && (
         <aside className="">
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Suggested for you</h4>
           <div className="space-y-3">

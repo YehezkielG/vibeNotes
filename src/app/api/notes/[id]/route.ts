@@ -109,12 +109,15 @@ export async function PATCH(
       );
     }
 
-    // Check if within 10-minute edit window
-    if (!canEditNote(note.createdAt)) {
-      return NextResponse.json(
-        { message: "Edit window has expired (10 minutes)" },
-        { status: 403 }
-      );
+    // Check if within 10-minute edit window for public notes only.
+    // Private notes may be edited at any time by their owner.
+    if (note.isPublic) {
+      if (!canEditNote(note.createdAt)) {
+        return NextResponse.json(
+          { message: "Edit window has expired (10 minutes)" },
+          { status: 403 }
+        );
+      }
     }
 
     // Analyze emotion for updated content

@@ -20,6 +20,7 @@ interface PublicNoteCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
   hideMeta?: boolean;
+  hideDominant?: boolean;
 }
 
 export default function PublicNoteCard({
@@ -27,7 +28,7 @@ export default function PublicNoteCard({
   showMenu,
   isOwner,
   onEdit,
-  onDelete,
+  onDelete,hideDominant = false,
   hideMeta = false,
 }: PublicNoteCardProps) {
   const [showActions, setShowActions] = useState(false);
@@ -91,7 +92,7 @@ export default function PublicNoteCard({
             </div>
           </div>
         </div>
-        {dominant && (
+        {!hideDominant && (dominant && (
           <div className="flex items-center">
             <div
               className="inline-flex items-center gap-2 rounded-full p-2 text-sm font-semibold shadow-sm border"
@@ -108,7 +109,7 @@ export default function PublicNoteCard({
               </span>
             </div>
           </div>
-        )}
+        ))}
       </div>
 
       {/* Title */}

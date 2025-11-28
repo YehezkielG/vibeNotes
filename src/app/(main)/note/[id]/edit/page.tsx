@@ -10,13 +10,13 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
-  Save,
   RotateCcw,
   Copy,
   Trash2,
   ArrowLeft,
 } from "lucide-react";
 import { canEditNote } from "@/lib/utils/notesLib";
+import EditNoteSkeleton from "@/components/skeletons/EditNoteSkeleton";
 
 export default function EditNotePage() {
   const params = useParams();
@@ -36,7 +36,6 @@ export default function EditNotePage() {
   const [canEdit, setCanEdit] = useState(true);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [fontSize, setFontSize] = useState("14px");
   const editorFontFamily = "var(--font-inter), 'Inter', sans-serif";
   const editorMinHeight = focusMode ? "calc(100vh - 320px)" : "60vh";
   const [undoStack, setUndoStack] = useState<string[]>([]);
@@ -66,12 +65,14 @@ export default function EditNotePage() {
           return;
         }
 
-        // Check if can edit (within 10 minutes)
-        if (!canEditNote(note.createdAt)) {
-          setError("Edit window has expired (10 minutes)");
-          setCanEdit(false);
-          setTimeout(() => router.push("/note/yours/private"), 2000);
-          return;
+        // Check edit window: only enforce 10-minute rule for public notes.
+        if (note.isPublic) {
+          if (!canEditNote(note.createdAt)) {
+            setError("Edit window has expired (10 minutes)");
+            setCanEdit(false);
+            setTimeout(() => router.push("/note/yours/private"), 2000);
+            return;
+          }
         }
 
         setTitle(note.title);
@@ -114,7 +115,7 @@ export default function EditNotePage() {
 
   useEffect(() => {
     adjustTextareaHeight();
-  }, [content, fontSize, focusMode]);
+  }, [content, focusMode]);
 
   useEffect(() => {
     if (undoTimeout.current) clearTimeout(undoTimeout.current);
@@ -197,7 +198,8 @@ export default function EditNotePage() {
         throw new Error(data?.message || "Failed to update note");
       }
 
-      router.push("/note/yours/private");
+      // Redirect immediately to the note detail after successful update
+      router.push(`/note/${noteId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -224,12 +226,7 @@ export default function EditNotePage() {
   };
 
   if (authStatus === "loading" || isLoading) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-sm">
-        <Loader2 className="h-10 w-10 animate-spin" />
-        <span>Loading note...</span>
-      </div>
-    );
+    return <EditNoteSkeleton />;
   }
 
   if (error && !canEdit) {
@@ -314,18 +311,7 @@ export default function EditNotePage() {
                 {label}
               </button>
             ))}
-            <div className="ml-auto flex items-center gap-3">
-              <select
-                value={fontSize}
-                onChange={(e) => setFontSize(e.target.value)}
-                disabled={!canEdit}
-                className="rounded-md border px-3 py-1.5 bg-white text-xs font-semibold"
-              >
-                <option value="14px">14px</option>
-                <option value="16px">16px</option>
-                <option value="18px">18px</option>
-              </select>
-            </div>
+            <div className="ml-auto flex items-center gap-3" />
           </div>
 
           <div className="flex-1 min-h-0">
@@ -342,7 +328,6 @@ export default function EditNotePage() {
               className="w-full overflow-none resize-none bg-transparent text-sm outline-none focus:ring-0 leading-relaxed disabled:opacity-50"
               style={{
                 fontFamily: editorFontFamily,
-                fontSize,
                 minHeight: editorMinHeight,
                 transition: "height 120ms ease-in-out",
                 backgroundClip: "padding-box",
@@ -391,6 +376,7 @@ export default function EditNotePage() {
             <span>{isSaving ? "Saving..." : "Update Note"}</span>
           </button>
         </div>
+        {/* removed transient saved message; redirect happens immediately after save */}
       </form>
     </div>
   );

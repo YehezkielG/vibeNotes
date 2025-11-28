@@ -19,7 +19,7 @@ import {
 
 const LOCAL_DRAFT_KEY = "new-note-draft";
 
-export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotion: []) => void }) {
+export default function TextEditor({ analyzeEmotion }: { analyzeEmotion?: (emotion: []) => void }) {
   const router = useRouter();
   const { status: authStatus } = useSession();
   const [title, setTitle] = useState("");
@@ -29,7 +29,6 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
   const [error, setError] = useState<string | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [fontSize, setFontSize] = useState("14px");
   const editorFontFamily = "var(--font-inter), 'Inter', sans-serif";
   const editorMinHeight = focusMode ? "calc(100vh - 50vh)" : "60vh";
   const [undoStack, setUndoStack] = useState<string[]>([]);
@@ -43,20 +42,10 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
   const [showTitleBanner, setShowTitleBanner] = useState(false);
   const [showSuggestTooltip, setShowSuggestTooltip] = useState(false);
   const [includeCounselor, setIncludeCounselor] = useState(false);
-  const [counselorAdvice, setCounselorAdvice] = useState<string | null>(null);
-  const [showCounselorModal, setShowCounselorModal] = useState(false);
-  const [savedNoteId, setSavedNoteId] = useState<string | null>(null);
-  const counselorRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-scroll to counselor panel when advice arrives
-  useEffect(() => {
-    if (showCounselorModal && counselorAdvice && counselorRef.current) {
-      // scroll smoothly to the panel
-      counselorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      // give focus for a11y
-      (counselorRef.current as HTMLDivElement).focus?.();
-    }
-  }, [showCounselorModal, counselorAdvice]);
+  // Previously auto-scrolled to counselor panel; counselor UI removed.
+  // (keep placeholder in case we reintroduce counselor UI later)
 
   // load draft from localStorage on mount
   useEffect(() => {
@@ -136,7 +125,7 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
 
   useEffect(() => {
     adjustTextareaHeight();
-  }, [content, fontSize, focusMode]);
+  }, [content, focusMode]);
 
   useEffect(() => {
     const handleResize = () => adjustTextareaHeight();
@@ -251,19 +240,20 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
       if (!response.ok) {
         throw new Error(data?.message || "Failed to save the note.");
       }
-      analyzeEmotion(data?.note?.emotion ?? []);
+      analyzeEmotion?.(data?.note?.emotion ?? []);
 
-      // Show counselor advice if it was generated and keep the saved note id
-      if (data?.note) {
-        setSavedNoteId(String(data.note._id || data.note.id || ""));
-      }
-      if (data?.note?.counselorAdvice) {
-        setCounselorAdvice(data.note.counselorAdvice);
-        setShowCounselorModal(true);
-      }
-
+      // remove draft
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(LOCAL_DRAFT_KEY);
+      }
+
+      // Immediately navigate to the saved note detail
+      if (data?.note) {
+        const newId = String(data.note._id || data.note.id || "");
+        if (newId) {
+          router.push(`/note/${String(newId)}`);
+          return;
+        }
       }
     } catch (err: any) {
       setError(err.message);
@@ -506,28 +496,6 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
                 {label}
               </button>
               ))}
-            <div className="ml-auto flex items-center gap-3">
-              <select
-                value={fontSize}
-                onChange={(e) => setFontSize(e.target.value)}
-                className="rounded-md border px-3 py-1.5 bg-white text-xs font-semibold "
-              >
-                <option value="14px">14px</option>
-                <option value="16px">16px</option>
-                <option value="18px">18px</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => setFocusMode((s) => !s)}
-                className="rounded-md border bg-white border-black/60 p-2 text-black hover:border-black hover:text-gray-600 cursor-pointer"
-              >
-                {focusMode ? (
-                  <Minimize2 className="h-4 w-4 text-black" />
-                ) : (
-                  <Maximize2 className="h-4 w-4 text-black" />
-                )}
-              </button>
-            </div>
           </div>
           <div className="flex-1 min-h-0 text-gray-800">
             <textarea
@@ -543,7 +511,6 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
               "
               style={{
                 fontFamily: editorFontFamily,
-                fontSize,
                 minHeight: editorMinHeight,
                 transition: "height 120ms ease-in-out",
                 backgroundClip: "padding-box", overflow:"none"
@@ -602,42 +569,10 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion: (emotio
             </button>
           </div>
         </div>
+        {/* 'View this note' and AI counselor UI moved to parent via `onSaved` callback */}
       </form>
 
-      {/* AI Counselor Panel (appears at the bottom and auto-scrolls into view) */}
-      {showCounselorModal && counselorAdvice && (
-        <div
-          ref={counselorRef}
-          tabIndex={-1}
-          className="mt-6 rounded-xl p-4 bg-linear-to-br from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm"
-        >
-          <div className="flex items-start gap-4">
-            <div className="shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <span className="text-xl">🌿</span>
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-indigo-900 mb-1">AI Counselor Reflection</h4>
-              <p className="text-sm text-gray-700 leading-relaxed italic mb-4">{counselorAdvice}</p>
-              <div className="flex items-center gap-3">
-                {savedNoteId ? (
-                  <button
-                    onClick={() => router.push(`/note/${savedNoteId}`)}
-                    className="text-indigo-600 text-sm font-medium hover:underline"
-                  >
-                    View this note
-                  </button>
-                ) : null}
-                <button
-                  onClick={() => setShowCounselorModal(false)}
-                  className="text-sm text-gray-600 hover:bg-gray-100 px-3 py-1 rounded"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* AI Counselor removed from editor UI; new page will redirect immediately */}
     </div>
   );
 }

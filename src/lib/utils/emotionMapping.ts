@@ -71,24 +71,40 @@ export const getEmojiForLabel = (label: string): string => {
 };
 
 export const getLabelColor = (label: string): string => {
-  // Optional: colors for charts or badges
+  // Colors tuned to the "vibe" of each GoEmotion label.
+  // These provide visually distinct hues for charts and badges.
   const colorMap: Record<string, string> = {
-    love: "#FF4D4D", // Red
-    joy: "#FFD700", // Gold
-    sadness: "#536DFE", // Blue
-    anger: "#FF3D00", // Orange
-    fear: "#9C27B0", // Purple
-    neutral: "#9E9E9E", // Gray
-    optimism: "#00E676", // Bright green
-    sad: "#64748b",
-    disgust: "#a855f7",
-    surprise: "#f97316",
-    happy: "#10b981",
-    happiness: "#10b981",
-    anxiety: "#facc15",
-    // Add more or rely on default
+    admiration: "#7C4DFF", // violet - awe / wonder
+    amusement: "#FFB86B", // warm orange - playful
+    anger: "#FF3D00", // strong red - intense anger
+    annoyance: "#FF7043", // muted orange - irritation
+    approval: "#00C853", // green - affirmative
+    caring: "#FF6DAA", // soft pink - nurturing
+    confusion: "#9E9E9E", // gray - unclear
+    curiosity: "#4FC3F7", // sky blue - inquisitive
+    desire: "#FF6D00", // deep orange - longing
+    disappointment: "#6B7280", // cool gray - letdown
+    disapproval: "#D32F2F", // deep red - rejection
+    disgust: "#8D6E63", // brownish - aversion
+    embarrassment: "#F48FB1", // blushing pink
+    excitement: "#FF4081", // bright pink - exhilaration
+    fear: "#7E57C2", // purple - uneasy / anxious
+    gratitude: "#FFB74D", // warm gold - thankful
+    grief: "#37474F", // very dark slate - heavy sorrow
+    joy: "#FFD54F", // sunny yellow - happiness
+    love: "#E91E63", // rosy red - affection
+    nervousness: "#FFCA28", // amber - jittery
+    optimism: "#00E676", // bright green - hopeful
+    pride: "#FF8A65", // coral - confident
+    realization: "#29B6F6", // bright blue - aha moment
+    relief: "#66BB6A", // soft green - calm after stress
+    remorse: "#8E24AA", // muted magenta - regretful
+    sadness: "#1976D2", // deep blue - sorrow
+    surprise: "#FFC107", // amber - startled
+    neutral: "#9E9E9E", // neutral gray
   };
-  return colorMap[label] || "#607D8B"; // Default blue gray
+
+  return colorMap[label] || "#607D8B"; // fallback blue-gray
 };
 
 export const extractDominantEmotion = (

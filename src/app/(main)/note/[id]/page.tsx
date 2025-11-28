@@ -1,16 +1,14 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 // relaxed id handling: avoid strict mongoose ObjectId check
-import { MessageCircle, Share2, Lock, Globe } from "lucide-react";
+import {  Lock } from "lucide-react";
 import dbConnect from "@/lib/mongoose";
 import Note from "@/models/Note";
 import { auth } from "@/auth";
 import User from "@/models/User";
 import ResponseClient from "./Response";
 import { getEmojiForLabel, getLabelColor } from "@/lib/utils/emotionMapping";
-import LikeButton from "@/components/LikeButton";
 import { formatCreatedAt } from "@/lib/utils/notesLib";
+import PublicNoteCard from "@/components/PublicNoteCard";
 
 export default async function NoteDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params;
@@ -119,26 +117,43 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
   // Author info
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const authorObj = note.author as any | undefined;
-  const author = authorObj
-    ? {
-        username: authorObj.username ?? "unknown",
-        displayName: authorObj.displayName ?? authorObj.username ?? "Unknown",
-        image: authorObj.image ?? "/default-profile.png",
-      }
-    : { username: "unknown", displayName: "Unknown Author", image: "/default-profile.png" };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const likedBy = Array.isArray(note.likedBy) ? note.likedBy.map((v: any) => String(v)) : [];
   const likes = note.likes ?? 0;
+  
+  // Get session once and determine ownership for both public and private flows
+  const session = await auth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const requesterId = session?.user?.id ?? (session?.user as Record<string, any> | undefined)?._id?.toString?.() ?? null;
+  const noteAuthorId = authorObj ? String(authorObj._id ?? "") : String(note.author ?? "");
+  const isOwner = requesterId && requesterId === noteAuthorId;
+  
+  // Build a client-safe note object to pass into client components
+  const clientNote = {
+    _id: String(note._id ?? ""),
+    title: note.title ?? "",
+    content: note.content ?? "",
+    createdAt: note.createdAt ? new Date(note.createdAt).toISOString() : "",
+    author: authorObj
+      ? {
+          _id: String(authorObj._id ?? ""),
+          username: authorObj.username ?? "",
+          displayName: authorObj.displayName ?? authorObj.username ?? "",
+          image: authorObj.image ?? "/default-profile.png",
+        }
+      : "",
+    likes,
+    likedBy,
+    isPublic: Boolean(note.isPublic),
+    emotion: Array.isArray(note.emotion)
+      ? note.emotion.map((it: { label: string; score: number }) => ({ label: it.label, score: Number(it.score) }))
+      : [],
+    responses: serialResponses,
+  };
 
   // Private access check (owner only)
   if (!note.isPublic) {
-    const session = await auth();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const requesterId = session?.user?.id ?? (session?.user as Record<string, any> | undefined)?._id?.toString?.() ?? null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawAuthor = note.author as any | string | undefined;
-    const noteAuthorId = typeof rawAuthor === "object" && rawAuthor !== null ? rawAuthor._id?.toString?.() ?? "" : rawAuthor?.toString?.() ?? "";
     if (!requesterId || requesterId !== noteAuthorId) {
       return (
         <div className="flex h-[300px] items-center justify-center gap-2 text-sm text-gray-600">
@@ -153,45 +168,9 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
     <>
       {note.isPublic ? (
         <>
-          <article className="rounded-xl border border-transparent bg-white/70 backdrop-blur transition-shadow">
-            <div className="relative flex items-center">
-              <div className="w-12 h-12 aspect-square rounded-full overflow-hidden mr-3 shrink-0">
-                <Image
-                  src={author.image}
-                  alt="Author Avatar"
-                  width={50}
-                  height={50}
-                  className="object-cover w-full h-full rounded-full"
-                  style={{ objectFit: "cover", width: "100%", height: "100%", borderRadius: "9999px" }}
-                />
-              </div>
-              <div className="font-medium">
-                <Link href={`/profile/${author.username}`}>{author.displayName}</Link>
-                <p className="text-sm text-gray-500">@{author.username}</p>
-              </div>
-              <div className="absolute right-0 top-0 text-gray-500">
-                <Globe size={20} />
-              </div>
-            </div>
+            <PublicNoteCard note={clientNote} showMenu={true} hideDominant={true} isOwner={isOwner} />
 
-            <span className="mt-5 block text-xs text-gray-500">{formatCreatedAt(note.createdAt)} ago</span>
-
-            <h3 className="mt-2 font-semibold">{note.title?.trim() || "(Untitled note)"}</h3>
-            <p className="mt-2 whitespace-pre-wrap text-gray-700">{note.content}</p>
-
-            <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
-              <LikeButton noteId={String(note._id ?? "")} likes={likes} likedBy={likedBy} />
-              <button className="inline-flex items-center gap-1 hover:text-gray-700">
-                <MessageCircle size={16} />
-                <span>{note.responses?.length || 0}</span>
-              </button>
-              <button className="inline-flex items-center gap-1 hover:text-gray-700">
-                <Share2 size={16} />
-                <span>Share</span>
-              </button>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap gap-3">
               {Array.isArray(note.emotion) && note.emotion.length > 0 ? (
                 note.emotion.map((item: { label: string; score: number }) => {
                   const bgColor = getLabelColor(item.label) ?? "#f3f4f6";
@@ -210,8 +189,6 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
                 <div className="space-y-3 mt-4 w-full">No emotions detected.</div>
               )}
             </div>
-          </article>
-
           {/* AI Counselor Advice Card - shown below emotion distribution */}
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {(note as any).counselorAdvice && (

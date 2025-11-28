@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ListNote from "@/components/ListNotes";
 import NoteCardSkeleton from "@/components/skeletons/NoteCardSkeleton";
+import SearchBarSkeleton from "@/components/skeletons/SearchBarSkeleton";
 import SearchBar from "@/components/SearchBar";
 import Image from "next/image";
 import Link from "next/link";
