@@ -143,7 +143,7 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="bg-white rounded-xl ">
           <div className="flex items-start gap-4">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shrink-0">
+            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shrink-0`}>
               <Image
                 src={transformAvatar(user.image || "/default-profile.png",80)}
                 alt="Profile Picture"
@@ -155,8 +155,8 @@ export default function ProfilePage() {
             <div className="ml-2 md:ml-4 flex-1 min-w-0">
               <div className="flex items-center gap-3">
                 <div className="min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold truncate">{user.displayName}</h1>
-                  <p className="text-sm text-gray-600 truncate">@{user.username}</p>
+                  <h1 className="text-2xl md:text-3xl font-bold truncate text-black">{user.displayName}</h1>
+                  <p className="text-sm text-gray-500 truncate">@{user.username}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3 relative">
                   {!isOwnProfile && session ? (
@@ -268,6 +268,12 @@ export default function ProfilePage() {
 
                       const data = await res.json();
                       setUser(data.user ?? user);
+                      // Broadcast updated user so other client components can update immediately
+                      try {
+                        window.dispatchEvent(new CustomEvent("vibe:sessionUpdate", { detail: data.user }));
+                      } catch (e) {
+                        // ignore in environments where CustomEvent isn't allowed
+                      }
                       setShowEdit(false);
                       // Redirect to new username profile if username changed
                       if (data.user?.username && data.user.username !== username) {
@@ -293,7 +299,7 @@ export default function ProfilePage() {
                     <label className="block text-sm text-gray-600">Username</label>
                     <input
                       value={editData.username}
-                      onChange={(e) => setEditData({ ...editData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                              onChange={(e) => setEditData({ ...editData, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })}
                       className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
                       placeholder="username"
                       minLength={3}

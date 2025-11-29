@@ -4,14 +4,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { Compass, ChartLine, NotebookText,PlusCircle, LogIn } from "lucide-react";
 import { transformAvatar } from "@/lib/utils/image";
-import { p } from "framer-motion/client";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const isLoading = status === "loading";
+
+  // Local user to reflect immediate updates
+  const [localUser, setLocalUser] = useState(session?.user ?? null);
+  useEffect(() => setLocalUser(session?.user ?? null), [session?.user]);
+  useEffect(() => {
+    const handler = (e: Event) => setLocalUser((e as CustomEvent).detail ?? session?.user ?? null);
+    window.addEventListener("vibe:sessionUpdate", handler as EventListener);
+    return () => window.removeEventListener("vibe:sessionUpdate", handler as EventListener);
+  }, [session?.user]);
 
   const items = [
     { href: "/", label: "Explore", icon: Compass },
@@ -22,7 +31,7 @@ export default function BottomNav() {
 
   const isActive = (href: string) => pathname === href || (href === "/" && pathname === "/");
 
-  const avatar = transformAvatar(session?.user?.image || "/default-profile.png", 64);
+  const avatar = transformAvatar((localUser as any)?.image || session?.user?.image || "/default-profile.png", 64);
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 lg:hidden">
@@ -47,7 +56,7 @@ export default function BottomNav() {
               <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden shrink-0 animate-pulse" />
             ) : session?.user ? (
               <Link
-                href={`/profile/${session.user.username}`}
+                href={`/profile/${(localUser as any)?.username ?? session.user.username}`}
                 aria-label="Profil"
                 className={`w-6 h-6 block rounded-full shrink-0 overflow-hidden ring-2 ${
                   pathname?.startsWith(`/profile/${session.user.username}`)

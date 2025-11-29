@@ -4,13 +4,31 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SearchBar from "./SearchBar";
 import { transformAvatar } from "@/lib/utils/image";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const isLoading = status === "loading";
+
+  // Local user state to reflect immediate updates when profile changes.
+  const [localUser, setLocalUser] = useState(session?.user ?? null);
+
+  // Keep localUser in sync with session and listen for manual updates.
+  useEffect(() => setLocalUser(session?.user ?? null), [session?.user]);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail;
+        if (detail) setLocalUser(detail);
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener("vibe:sessionUpdate", handler as EventListener);
+    return () => window.removeEventListener("vibe:sessionUpdate", handler as EventListener);
+  }, []);
 
   const pathname = usePathname();
   const isOwnProfileView = !!(
@@ -51,7 +69,7 @@ export default function Navbar() {
   // removed dropdown logic; logout will be handled on the profile page
 
   const profileImage = transformAvatar(
-    session?.user?.image || "/default-profile.png",
+    (localUser as any)?.image || session?.user?.image || "/default-profile.png",
     48
   );
 
@@ -123,7 +141,7 @@ export default function Navbar() {
                     </div>
                   ) : session?.user ? (
                 <Link
-                  href={`/profile/${session.user.username}`}
+                  href={`/profile/${(localUser as any)?.username ?? session.user.username}`}
                   className="flex items-center gap-3 min-w-0 shrink-0"
                 >
                   <div
@@ -145,9 +163,9 @@ export default function Navbar() {
                         ? "text-black font-semibold"
                         : "text-gray-600 hover:text-black"
                     }`}
-                    title={session?.user?.username ?? ""}
+                    title={(localUser as any)?.username ?? session?.user?.username ?? ""}
                   >
-                    {session?.user?.username ?? ""}
+                    {(localUser as any)?.username ?? session?.user?.username ?? ""}
                   </span>
                 </Link>
               ) : (
