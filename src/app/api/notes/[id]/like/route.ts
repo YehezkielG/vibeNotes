@@ -6,15 +6,14 @@ import Note from "@/models/Note";
 
 export async function POST(
   _request: Request,
-  { params }: { params: { id: string } },
+  context: any,
 ) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
     }
-
-    const { id } = await params;
+    const { id } = await context.params;
     const noteId = id;
     if (!mongoose.isValidObjectId(noteId)) {
       return NextResponse.json({ message: "Invalid note ID." }, { status: 400 });

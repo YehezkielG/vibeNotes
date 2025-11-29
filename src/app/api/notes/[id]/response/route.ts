@@ -8,7 +8,7 @@ import Note from "@/models/Note";
 // POST: Add new response
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any,
 ) {
   try {
     const session = await auth();
@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = await context.params;
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ error: "Invalid note ID" }, { status: 400 });
     }
@@ -118,7 +118,7 @@ export async function POST(
 // PATCH: Like response/reply or add reply to response
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: any,
 ) {
   try {
     const session = await auth();
@@ -126,7 +126,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = await context.params;
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json({ error: "Invalid note ID" }, { status: 400 });
     }

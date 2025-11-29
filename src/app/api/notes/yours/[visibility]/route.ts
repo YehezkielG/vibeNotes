@@ -5,10 +5,10 @@ import Note from "@/models/Note";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { visibility: string } },
+  context: any,
 ) {
   try {
-    const { visibility } = await params;
+    const { visibility } = await context.params;
 
     const session = await auth();
     if (!session?.user?.id) {

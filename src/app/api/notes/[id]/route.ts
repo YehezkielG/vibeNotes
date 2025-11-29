@@ -10,10 +10,10 @@ import { getCounselorAdvice } from "@/lib/ai-counselor";
 // GET single note by ID
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  context: any,
 ) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     await dbConnect();
 
     const note = await Note.findById(id)
@@ -75,7 +75,7 @@ export async function GET(
 // PATCH - Update note (only within 10 minutes and by owner)
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: any,
 ) {
   try {
     const session = await auth();
@@ -83,7 +83,7 @@ export async function PATCH(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = await context.params;
     const body = await request.json();
     const { title, content, includeCounselor } = body;
 
@@ -162,7 +162,7 @@ export async function PATCH(
 // DELETE - Remove note (only by owner)
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  context: any,
 ) {
   try {
     const session = await auth();
@@ -170,7 +170,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = await context.params;
     await dbConnect();
 
     const note = await Note.findById(id);

@@ -7,11 +7,14 @@ import { IUser } from "@/models/User";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { username: string, id:string } },
+  context: any,
 ) {
   try {
-    const { username,id } = await params;
-    console.log(id)
+    // `context.params` may be a Promise in some Next.js versions/environments;
+    // await it to be safe at runtime. Use `any` for the context typing to
+    // avoid TypeScript RouteHandler signature mismatches.
+    const { username, id } = await context.params;
+    console.log(id);
     if (!username || typeof username !== "string") {
       return NextResponse.json(
         { message: "Username is required." },

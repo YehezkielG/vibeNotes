@@ -78,10 +78,6 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* mobile search removed per request (Instagram-like) */}
-
-      {/* Mobile slide-over menu removed: use BottomNav for navigation */}
-
       {/* Desktop header + vertical nav */}
       <div className="hidden lg:block">
         <div className="flex select-none my-5">

@@ -11,7 +11,7 @@ import { formatCreatedAt } from "@/lib/utils/notesLib";
 import PublicNoteCard from "@/components/PublicNoteCard";
 
 export default async function NoteDetailPage({ params }: { params: { id: string } }) {
-  const { id } = await params;
+  const { id } = params;
 
   await dbConnect();
 

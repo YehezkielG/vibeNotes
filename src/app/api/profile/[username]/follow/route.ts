@@ -21,10 +21,10 @@ function buildStats(doc: any) {
 
 export async function POST(
   _request: Request,
-  { params }: { params: { username: string } },
-) { 
+  context: any,
+) {
   const session = await auth();
-  const { username } = await params;
+  const { username } = await context.params;
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
   }
@@ -71,9 +71,9 @@ export async function POST(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { username: string } },
+  context: any,
 ) {
-  const { username } = await params;
+  const { username } = await context.params;
   const session = await auth();
 
   if (!session?.user?.id) {
