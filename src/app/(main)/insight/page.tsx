@@ -127,7 +127,7 @@ export default function InsightPage() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <div className="container mx-auto px-4 py-6 md:py-10">
+      <div className="container mx-auto px-4 pb-6 md:pb-10">
         {/* Header Section */}
         <header className="mb-6 md:mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">

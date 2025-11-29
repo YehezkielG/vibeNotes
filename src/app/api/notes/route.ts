@@ -9,6 +9,36 @@ import sanitizeHtml from "sanitize-html";
 import mongoose from "mongoose";
 import User from "@/models/User";
 
+// Helper: sanitize strings and nested note structures before sending to client
+const sanitizeString = (value: any) => (typeof value === "string" ? sanitizeHtml(value) : value);
+
+function sanitizeReplies(replies: any) {
+  if (!Array.isArray(replies)) return replies;
+  return replies.map((r: any) => ({ ...r, content: sanitizeString(r?.content) }));
+}
+
+function sanitizeResponses(responses: any) {
+  if (!Array.isArray(responses)) return responses;
+  return responses.map((resp: any) => ({
+    ...resp,
+    content: sanitizeString(resp?.content),
+    replies: sanitizeReplies(resp?.replies),
+  }));
+}
+
+function sanitizeNoteObject(note: any) {
+  if (!note || typeof note !== "object") return note;
+  const sanitized: any = { ...note };
+  if (sanitized.title) sanitized.title = sanitizeString(sanitized.title);
+  if (sanitized.content) sanitized.content = sanitizeString(sanitized.content);
+  if (sanitized.responses) sanitized.responses = sanitizeResponses(sanitized.responses);
+  if (sanitized.author && typeof sanitized.author === "object") {
+    if (sanitized.author.displayName) sanitized.author.displayName = sanitizeString(sanitized.author.displayName);
+    if (sanitized.author.username) sanitized.author.username = sanitizeString(sanitized.author.username);
+  }
+  return sanitized;
+}
+
 export async function POST(request: Request) {
     try {
         const session = await auth();
@@ -173,6 +203,14 @@ export async function GET(request: Request) {
     let notes;
     let hasMore = false;
 
+    // Validate authorId when provided to avoid invalid DB queries
+    if (authorId && !mongoose.isValidObjectId(authorId)) {
+      return NextResponse.json(
+        { message: "Invalid author ID." },
+        { status: 400 },
+      );
+    }
+
     if (scope === "following") {
       const session = await auth();
       if (!session?.user?.id) {
@@ -213,6 +251,7 @@ export async function GET(request: Request) {
             popularity: 1,
             title: 1,
             content: 1,
+            emotion: 1,
             isPublic: 1,
             likes: 1,
             likedBy: 1,
@@ -244,6 +283,9 @@ export async function GET(request: Request) {
         const total = await Note.countDocuments(filter);
         hasMore = skip + notes.length < total;
       }
+
+      // Sanitize notes before returning to client
+      notes = Array.isArray(notes) ? notes.map(sanitizeNoteObject) : sanitizeNoteObject(notes);
 
       return NextResponse.json({ notes, hasMore }, { status: 200 });
     }
@@ -300,6 +342,9 @@ export async function GET(request: Request) {
         hasMore = skip + notes.length < total;
       }
 
+      // Sanitize notes before returning to client
+      notes = Array.isArray(notes) ? notes.map(sanitizeNoteObject) : sanitizeNoteObject(notes);
+
       return NextResponse.json({ notes, hasMore }, { status: 200 });
     }
 
@@ -322,7 +367,9 @@ export async function GET(request: Request) {
         );
       }
 
-      return NextResponse.json({ notes: note }, { status: 200 });
+      // Sanitize single note before returning
+      const safeNote = sanitizeNoteObject(note);
+      return NextResponse.json({ notes: safeNote }, { status: 200 });
     }
 
     const filter = { isPublic: true };
@@ -345,6 +392,8 @@ export async function GET(request: Request) {
           popularity: 1,
           title: 1,
           content: 1,
+          emotion: 1,
+          emotion: 1,
           isPublic: 1,
           likes: 1,
           likedBy: 1,
@@ -375,6 +424,9 @@ export async function GET(request: Request) {
       const total = await Note.countDocuments(filter);
       hasMore = skip + notes.length < total;
     }
+
+    // Sanitize notes before returning to client
+    notes = Array.isArray(notes) ? notes.map(sanitizeNoteObject) : sanitizeNoteObject(notes);
 
     return NextResponse.json({ notes, hasMore }, { status: 200 });
   } catch (error) {

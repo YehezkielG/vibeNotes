@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Compass, ChartLine, NotebookText,PlusCircle } from "lucide-react";
+import { Compass, ChartLine, NotebookText,PlusCircle, LogIn } from "lucide-react";
 import { transformAvatar } from "@/lib/utils/image";
 import { p } from "framer-motion/client";
 
@@ -64,7 +64,10 @@ export default function BottomNav() {
                 />
               </Link>
             ) : (
-              <Link href="/auth" className="text-gray-700 text-sm">Masuk</Link>
+              <Link href="/auth" className="inline-flex items-center gap-2 text-gray-700 text-sm">
+                <LogIn size={16} />
+                <span>sign in</span>
+              </Link>
             )}
           </li>
         </ul>

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ListNote from "@/components/ListNotes";
 import NoteCardSkeleton from "@/components/skeletons/NoteCardSkeleton";
-import SearchBarSkeleton from "@/components/skeletons/SearchBarSkeleton";
 import SearchBar from "@/components/SearchBar";
 import Image from "next/image";
 import Link from "next/link";
@@ -61,7 +60,6 @@ export default function ExplorePage() {
       const res = await fetch(`/api/notes?${params.toString()}`, {
         cache: "no-store",
       });
-
       if (res.status === 401) {
         if (!append) {
           setNotes([]);
@@ -77,6 +75,7 @@ export default function ExplorePage() {
       }
 
       const data = await res.json();
+      console.log("Fetched notes:", data);
       setNotes((prev) => mergeNotes(prev, data.notes ?? [], append));
       setHasMore(Boolean(data.hasMore));
     },
@@ -250,7 +249,7 @@ export default function ExplorePage() {
               ) : (
                 <>
                   <div className="space-y-10">
-                    <ListNote notes={notes} showDominant={activeTab === "popular"} />
+                    <ListNote notes={notes} />
                   </div>
                   <div ref={loaderRef} className="w-full" />
                   {loadingMore && <NoteCardSkeleton count={3} />}

@@ -1,5 +1,5 @@
 "use client";
-import { Compass, NotebookText, Bell, ChartLine, PlusCircle } from "lucide-react";
+import { Compass, NotebookText, Bell, ChartLine, PlusCircle, LogIn } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -151,12 +151,12 @@ export default function Navbar() {
                   </span>
                 </Link>
               ) : (
-                <Link
-                  className="border-2 text-white bg-indigo-600 px-4 py-1 rounded-xl"
-                  href="/auth"
-                >
-                  Sign In
-                </Link>
+                    <Link
+                      href="/auth" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 w-full"
+                    >
+                      <LogIn size={18} />
+                  <span>sign in</span>
+                    </Link>
               )}
             </div>
           </div>

@@ -11,8 +11,8 @@ export const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Notes App",
-  description: "A note-taking application built with Next.js",
+  title: "vibeNotes",
+  description: "Signal in the noise. An AI-powered sanctuary for self-reflection.",
 };
 
 export default async function RootLayout({

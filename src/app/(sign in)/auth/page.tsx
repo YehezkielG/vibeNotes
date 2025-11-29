@@ -85,17 +85,7 @@ export default function Form() {
         Continue with Google
       </motion.button>
 
-      <motion.button
-        type="button"
-        onClick={handleDiscordSignIn}
-        className="mb-6 flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white py-2 font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-95 disabled:opacity-50"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.97 }}
-        disabled={isLoading}
-      >
-        <Image src="/img/auth/Discord.png" alt="Discord" width={20} height={20} />
-        Continue with Discord
-      </motion.button>
+      {/* Discord OAuth removed from UI per request (provider still available server-side) */}
 
       <div className="my-6 flex items-center">
         <div className="grow border-t border-gray-300"></div>

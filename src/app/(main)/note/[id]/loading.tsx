@@ -36,14 +36,15 @@ export default function NoteDetailLoading() {
           <div className="h-5 w-16 rounded bg-gray-200" />
         </div>
 
+      </article>
+    
         {/* Emotion Tags */}
         <div className="flex gap-3 flex-wrap">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-8 w-28 rounded-2xl bg-gray-200" />
           ))}
         </div>
-      </article>
-
+        
       {/* Response Section Skeleton */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 animate-pulse">
         <div className="h-6 w-32 rounded bg-gray-200 mb-4" />
