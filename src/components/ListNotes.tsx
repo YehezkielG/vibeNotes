@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Portal from "@/components/Portal";
 import PrivateNoteCard from "@/components/PrivateNoteCard";
 import PublicNoteCard from "@/components/PublicNoteCard";
+import { normalizeNoteId } from "@/lib/utils/notesLib";
 
 /* VeggieBurgerIcon removed — not used after refactor */
 
@@ -27,8 +28,8 @@ export default function ListNote({ notes,  }: { notes: NoteType[]; }) {
   const items = localNotes;
   const isYourNotesRoute = Boolean(pathname?.includes("/note/yours/"));
 
-  const handleDeleteClick = (noteId: string) => {
-    setNoteToDelete(noteId);
+  const handleDeleteClick = (noteIdRaw: string) => {
+    setNoteToDelete(noteIdRaw);
     setShowDeleteModal(true);
   };
 
@@ -37,7 +38,7 @@ export default function ListNote({ notes,  }: { notes: NoteType[]; }) {
     
     setDeletingId(noteToDelete);
     // Optimistic update
-    setLocalNotes(prev => prev.filter(note => note._id !== noteToDelete));
+    setLocalNotes(prev => prev.filter(note => normalizeNoteId(note._id) !== noteToDelete));
     setShowDeleteModal(false);
     
     try {
@@ -104,10 +105,8 @@ export default function ListNote({ notes,  }: { notes: NoteType[]; }) {
               ? undefined
               : (note.author as UserProfileType);
 
-          const key =
-            typeof note._id === "string"
-              ? note._id
-              : String(note._id ?? `note-skeleton-${index}`);
+          const normalizedId = normalizeNoteId(note._id);
+          const key = normalizedId || `note-skeleton-${index}`;
 
           // Check if current user owns this note
           const isOwner = Boolean(session?.user?.id && authorObj?._id === session.user.id);
@@ -117,11 +116,13 @@ export default function ListNote({ notes,  }: { notes: NoteType[]; }) {
 
           // Handlers untuk edit dan delete
           const handleEdit = () => {
-            router.push(`/note/${note._id}/edit`);
+            if (!normalizedId) return;
+            router.push(`/note/${normalizedId}/edit`);
           };
 
           const handleDelete = () => {
-            handleDeleteClick(note._id as string);
+            if (!normalizedId) return;
+            handleDeleteClick(normalizedId);
           };
 
           return isPrivate ? (

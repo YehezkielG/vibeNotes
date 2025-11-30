@@ -6,6 +6,7 @@ import NoteCardSkeleton from "@/components/skeletons/NoteCardSkeleton";
 import SearchBar from "@/components/SearchBar";
 import Image from "next/image";
 import Link from "next/link";
+import { normalizeNoteId } from "@/lib/utils/notesLib";
 
 const TABS = [
   { id: "newest", label: "Newest" },
@@ -20,7 +21,7 @@ function mergeNotes(prev: NoteType[], incoming: NoteType[], append: boolean) {
   const seen = new Set<string>();
   const merged: NoteType[] = [];
   [...prev, ...(incoming ?? [])].forEach((note) => {
-    const id = note?._id ?? "";
+    const id = normalizeNoteId(note?._id);
     if (!id || seen.has(id)) return;
     seen.add(id);
     merged.push(note);

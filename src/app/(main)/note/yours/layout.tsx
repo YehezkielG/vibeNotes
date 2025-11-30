@@ -26,8 +26,8 @@ export default function YoursLayout({
     const tabClass = (active: boolean) =>
         `rounded-full border px-4 py-1.5 text-sm gap-2 font-medium transition-colors flex items-center${
                     active
-                      ? "border-black bg-black text-white"
-                      : "border-gray-300 text-gray-600 hover:border-black hover:text-black"
+                      ? "border-black bg-gray-700 text-white"
+                      : "border-gray-300 text-gray-600 hover:border-gray-700 hover:text-gray-700"
                   }`
 
     return (

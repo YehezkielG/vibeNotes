@@ -4,6 +4,7 @@ import { Lock, Calendar, MessageCircle, Dot, Trash2, Edit2 } from "lucide-react"
 import Link from "next/link";
 import { useState } from "react";
 import { getEmojiForLabel, extractDominantEmotion } from "@/lib/utils/emotionMapping";
+import { normalizeNoteId } from "@/lib/utils/notesLib";
 
 interface PrivateNoteCardProps {
   note: NoteType;
@@ -23,6 +24,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
   const now = new Date();
   const isToday = createdDate.toDateString() === now.toDateString();
   const isYesterday = new Date(now.getTime() - 86400000).toDateString() === createdDate.toDateString();
+  const noteId = normalizeNoteId(note._id);
   
   let timeDisplay = "";
   if (isToday) {
@@ -69,7 +71,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
       </div>
 
       {/* Title - Serif Font untuk Journal Feel */}
-      <Link href={`/note/${note._id}`} className="block group">
+      <Link href={`/note/${noteId}`} className="block group">
         <h3 className="font-serif text-xl font-semibold text-gray-800 mb-3 group-hover:text-gray-900 transition-colors">
           {note.title || "Untitled Entry"}
         </h3>

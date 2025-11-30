@@ -39,11 +39,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async session({ session, user }) {
       // Attach all user fields to session.user
-      const { id, username, name, image, isOnboarded } = user;
+      const { id, username, displayName, image, isOnboarded } = user;
       session.user = {
         id,
         username: username ?? null,
-        displayName: name ?? null,
+        displayName: displayName ?? null,
         image: image ?? null,
         isOnboarded: isOnboarded ?? false,
       };

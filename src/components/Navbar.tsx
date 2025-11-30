@@ -5,22 +5,35 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import SearchBar from "./SearchBar";
 import { transformAvatar } from "@/lib/utils/image";
+
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch");
+  return res.json();
+};
+
+type ClientSessionUser = {
+  username?: string | null;
+  image?: string | null;
+  displayName?: string | null;
+};
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const isLoading = status === "loading";
 
   // Local user state to reflect immediate updates when profile changes.
-  const [localUser, setLocalUser] = useState(session?.user ?? null);
+  const [localUser, setLocalUser] = useState<ClientSessionUser | null>(session?.user ?? null);
 
   // Keep localUser in sync with session and listen for manual updates.
   useEffect(() => setLocalUser(session?.user ?? null), [session?.user]);
   useEffect(() => {
     const handler = (e: Event) => {
       try {
-        const detail = (e as CustomEvent).detail;
+        const { detail } = e as CustomEvent<ClientSessionUser | null>;
         if (detail) setLocalUser(detail);
       } catch {
         // ignore
@@ -31,6 +44,12 @@ export default function Navbar() {
   }, []);
 
   const pathname = usePathname();
+  const shouldFetchUnread = Boolean(!isLoading && session?.user);
+  const { data: unreadSummary } = useSWR(shouldFetchUnread ? "/api/notifications/unread" : null, fetcher, {
+    refreshInterval: 60000,
+    revalidateOnFocus: true,
+  });
+  const unreadCount = unreadSummary?.unreadCount ?? 0;
   const isOwnProfileView = !!(
     !isLoading &&
     session?.user?.username &&
@@ -68,10 +87,14 @@ export default function Navbar() {
 
   // removed dropdown logic; logout will be handled on the profile page
 
+  const sessionUser = session?.user as ClientSessionUser | undefined;
+  const resolvedUser = localUser ?? sessionUser ?? null;
   const profileImage = transformAvatar(
-    (localUser as any)?.image || session?.user?.image || "/default-profile.png",
+    resolvedUser?.image || "/default-profile.png",
     48
   );
+  const resolvedUsername = resolvedUser?.username ?? sessionUser?.username ?? "";
+  const fallbackUsername = resolvedUsername || session?.user?.username || "";
 
   // Mobile menu open 
 
@@ -89,8 +112,11 @@ export default function Navbar() {
               <Image src="/logo.png" alt="Logo" width={28} height={28} />
               <span className="font-bold text-lg">vibeNotes</span>
             </Link>
-            <Link href="/notifications" aria-label="Notifications" className="text-gray-600 hover:text-gray-900">
+            <Link href="/notifications" aria-label="Notifications" className="relative text-gray-600 hover:text-gray-900">
               <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 right-0 h-2.5 w-2.5 rounded-full bg-red-500" />
+              )}
             </Link>
           </div>
         )}
@@ -126,7 +152,12 @@ export default function Navbar() {
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
-                      {item.icon}
+                      <span className="relative inline-flex">
+                        {item.icon}
+                        {item.href === "/notifications" && unreadCount > 0 && (
+                          <span className="absolute -top-1 right-0 h-2.5 w-2.5 rounded-full bg-red-500" />
+                        )}
+                      </span>
                       <span>{item.label}</span>
                     </Link>
                   </li>
@@ -141,7 +172,7 @@ export default function Navbar() {
                     </div>
                   ) : session?.user ? (
                 <Link
-                  href={`/profile/${(localUser as any)?.username ?? session.user.username}`}
+                  href={`/profile/${fallbackUsername}`}
                   className="flex items-center gap-3 min-w-0 shrink-0"
                 >
                   <div
@@ -163,9 +194,9 @@ export default function Navbar() {
                         ? "text-black font-semibold"
                         : "text-gray-600 hover:text-black"
                     }`}
-                    title={(localUser as any)?.username ?? session?.user?.username ?? ""}
+                    title={fallbackUsername}
                   >
-                    {(localUser as any)?.username ?? session?.user?.username ?? ""}
+                    {fallbackUsername}
                   </span>
                 </Link>
               ) : (

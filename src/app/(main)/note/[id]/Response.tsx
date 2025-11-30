@@ -34,28 +34,15 @@ interface ResponseProps {
   isPublic: boolean;
 }
 
-type ServerResp = {
-  _id?: string | { toString?: () => string };
-  author?: unknown;
-  createdAt?: string | number | Date;
-  replies?: Array<{
-    _id?: string | { toString?: () => string };
-    author?: unknown;
-    createdAt?: string | number | Date;
-  }>;
-  likedBy?: unknown[];
-};
-
 interface ResponseItemProps {
   response: NoteResponse;
   responseIndex: number;
   noteId: string;
   isPublic: boolean;
   onReplyAdded?: () => void;
-  serverResponsesRef?: React.RefObject<ServerResp[] | null>;
 }
 
-function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded, serverResponsesRef }: ResponseItemProps) {
+function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded }: ResponseItemProps) {
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
@@ -70,6 +57,8 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded,
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
   const { data: session } = useSession();
+  const serverIndex = typeof response.serverIndex === "number" ? response.serverIndex : responseIndex;
+  const responseAnchorId = `response-${serverIndex}`;
 
   // Close context menu when clicking outside
   useEffect(() => {
@@ -130,22 +119,6 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded,
     setShowContextMenu(false);
     
     try {
-      // Map the displayed responseIndex to the server index using server snapshot if available
-      let serverIndex = responseIndex;
-      try {
-        const snap = serverResponsesRef?.current;
-        if (Array.isArray(snap)) {
-          const idx = snap.findIndex((r: ServerResp) => {
-            if (r?._id && (response as ServerResp)?._id) return String(r._id) === String((response as ServerResp)._id);
-            // fallback match by author+createdAt
-            return resolveId(r.author) === resolveId(response.author) && String(r.createdAt) === String(response.createdAt);
-          });
-          if (idx >= 0) serverIndex = idx;
-        }
-      } catch (err) {
-        console.debug("error mapping server index", err);
-      }
-
       console.debug("attempting delete response", { responseIndex, serverIndex, noteId });
       const res = await fetch(`/api/notes/${noteId}/response`, {
         method: "PATCH",
@@ -178,21 +151,6 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded,
     setLocalLikes(optimisticLikes);
 
     try {
-      // map displayed index to server index
-      let serverIndex = responseIndex;
-      try {
-        const snap = serverResponsesRef?.current;
-        if (Array.isArray(snap)) {
-          const idx = snap.findIndex((r: ServerResp) => {
-            if (r?._id && (response as ServerResp)?._id) return String(r._id) === String((response as ServerResp)._id);
-            return resolveId(r.author) === resolveId(response.author) && String(r.createdAt) === String(response.createdAt);
-          });
-          if (idx >= 0) serverIndex = idx;
-        }
-      } catch (err) {
-        console.debug("error mapping server index for like", err);
-      }
-
       const res = await fetch(`/api/notes/${noteId}/response`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -228,21 +186,6 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded,
 
     setIsSubmittingReply(true);
     try {
-      // map displayed responseIndex to server index
-      let serverIndex = responseIndex;
-      try {
-        const snap = serverResponsesRef?.current;
-        if (Array.isArray(snap)) {
-          const idx = snap.findIndex((r: ServerResp) => {
-            if (r?._id && (response as ServerResp)?._id) return String(r._id) === String((response as ServerResp)._id);
-            return resolveId(r.author) === resolveId(response.author) && String(r.createdAt) === String(response.createdAt);
-          });
-          if (idx >= 0) serverIndex = idx;
-        }
-      } catch (err) {
-        console.debug("error mapping server index for add-reply", err);
-      }
-
       const res = await fetch(`/api/notes/${noteId}/response`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -306,7 +249,8 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded,
 
   return (
     <div 
-      className="group border-l-2 border-gray-100 pl-4 py-3 relative"
+      id={responseAnchorId}
+      className="group border-l-2 border-gray-100 pl-4 py-3 relative note-anchor"
       onContextMenu={handleContextMenu}
       onTouchStart={handleLongPressStart}
       onTouchEnd={handleLongPressEnd}
@@ -372,24 +316,25 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded,
       </div>
 
       {/* Replies */}
-          {response.replies && response.replies.length > 0 && (
+      {response.replies && response.replies.length > 0 && (
         <div className="mt-3 space-y-2 ml-4">
-              {response.replies.map((reply, idx) => {
-                const replyKey = resolveId((reply as any)._id) ?? `${resolveId(reply.author)}-${String(reply.createdAt)}`;
-                return (
-                  <ReplyItem
-                    key={replyKey}
-                    reply={reply}
-                    replyIndex={idx}
-                    responseIndex={responseIndex}
-                    responseProp={response}
-                    noteId={noteId}
-                    isPublic={isPublic}
-                    onReplyAdded={onReplyAdded}
-                    serverResponsesRef={serverResponsesRef}
-                  />
-                );
-              })}
+          {response.replies.map((reply, idx) => {
+            const serverReplyIndex =
+              typeof reply.serverReplyIndex === "number" ? reply.serverReplyIndex : idx;
+            const replyKey = `response-${serverIndex}-reply-${serverReplyIndex}`;
+            return (
+              <ReplyItem
+                key={replyKey}
+                reply={reply}
+                replyIndex={idx}
+                responseIndex={responseIndex}
+                parentServerIndex={serverIndex}
+                noteId={noteId}
+                isPublic={isPublic}
+                onReplyAdded={onReplyAdded}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -454,14 +399,13 @@ interface ReplyItemProps {
   reply: NoteResponseReply;
   replyIndex: number;
   responseIndex: number;
-  responseProp?: NoteResponse;
+  parentServerIndex: number;
   noteId: string;
   isPublic: boolean;
   onReplyAdded?: () => void;
-  serverResponsesRef?: React.RefObject<ServerResp[] | null>;
 }
 
-function ReplyItem({ reply, replyIndex, responseIndex, responseProp, noteId, isPublic, onReplyAdded, serverResponsesRef }: ReplyItemProps) {
+function ReplyItem({ reply, replyIndex, responseIndex, parentServerIndex, noteId, isPublic, onReplyAdded }: ReplyItemProps) {
   const [localLikes, setLocalLikes] = useState(reply.likes);
   const [isLiking, setIsLiking] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
@@ -490,6 +434,12 @@ function ReplyItem({ reply, replyIndex, responseIndex, responseProp, noteId, isP
         : [],
     [reply.likedBy]
   );
+
+  const serverResponseIndex =
+    typeof reply.serverResponseIndex === "number" ? reply.serverResponseIndex : parentServerIndex;
+  const serverReplyIndex =
+    typeof reply.serverReplyIndex === "number" ? reply.serverReplyIndex : replyIndex;
+  const replyAnchorId = `response-${serverResponseIndex}-reply-${serverReplyIndex}`;
 
   useEffect(() => {
     setHasLiked(normalizedLikedBy.includes(currentUserId || ""));
@@ -546,33 +496,6 @@ function ReplyItem({ reply, replyIndex, responseIndex, responseProp, noteId, isP
     setShowContextMenu(false);
     
     try {
-      // Map displayed indexes to server indexes using snapshot if present
-      let serverResponseIndex = responseIndex;
-      let serverReplyIndex = replyIndex;
-      try {
-        const snap = serverResponsesRef?.current;
-        if (Array.isArray(snap) && responseProp) {
-          const rIdx = snap.findIndex((r: ServerResp) => {
-            if (r?._id && (responseProp as ServerResp)?._id) return String(r._id) === String((responseProp as ServerResp)._id);
-            return (
-              resolveId(r.author) === resolveId((responseProp as ServerResp).author) &&
-              String(r.createdAt) === String((responseProp as ServerResp).createdAt)
-            );
-          });
-          if (rIdx >= 0) {
-            serverResponseIndex = rIdx;
-            const repliesArr = snap[rIdx]?.replies || [];
-            const repIdx = repliesArr.findIndex((rep: { _id?: unknown; author?: unknown; createdAt?: unknown }) => {
-              if (rep?._id && (reply as ServerResp)?._id) return String(rep._id) === String((reply as ServerResp)._id);
-              return resolveId(rep.author) === resolveId(reply.author) && String(rep.createdAt) === String(reply.createdAt);
-            });
-            if (repIdx >= 0) serverReplyIndex = repIdx;
-          }
-        }
-      } catch (err) {
-        console.debug("error mapping server indexes for reply delete", err);
-      }
-
       console.debug("attempting delete reply", { responseIndex, replyIndex, serverResponseIndex, serverReplyIndex, noteId });
       const res = await fetch(`/api/notes/${noteId}/response`, {
         method: "PATCH",
@@ -608,8 +531,8 @@ function ReplyItem({ reply, replyIndex, responseIndex, responseProp, noteId, isP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "like-reply",
-          responseIndex,
-          replyIndex,
+          responseIndex: serverResponseIndex,
+          replyIndex: serverReplyIndex,
         }),
       });
 
@@ -644,7 +567,8 @@ function ReplyItem({ reply, replyIndex, responseIndex, responseProp, noteId, isP
 
   return (
     <div 
-      className="group bg-gray-50 rounded-lg p-2 relative"
+      id={replyAnchorId}
+      className="group bg-gray-50 rounded-lg p-2 relative note-anchor"
       onContextMenu={handleContextMenu}
       onTouchStart={handleLongPressStart}
       onTouchEnd={handleLongPressEnd}
@@ -712,18 +636,12 @@ function ReplyItem({ reply, replyIndex, responseIndex, responseProp, noteId, isP
   );
 }
 
-export default function Response({ noteId, initialResponses, isPublic }: ResponseProps) {
+export default function Response({ noteId, initialResponses = [], isPublic }: ResponseProps) {
   const { data: session } = useSession();
   const [responseText, setResponseText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localResponses, setLocalResponses] = useState<NoteResponse[]>(initialResponses);
+  const [localResponses, setLocalResponses] = useState<NoteResponse[]>(initialResponses ?? []);
   const responseRef = useRef<HTMLTextAreaElement | null>(null);
-  const serverResponsesRef = useRef<ServerResp[] | null>(null);
-
-  // initialize server snapshot from SSR props
-  useEffect(() => {
-    serverResponsesRef.current = initialResponses || null;
-  }, [initialResponses]);
 
   const handleAddResponse = async () => {
     if (!responseText.trim() || isSubmitting || !session?.user) return;
@@ -737,32 +655,8 @@ export default function Response({ noteId, initialResponses, isPublic }: Respons
       });
       if (res.ok) {
         const data = await res.json();
-        const serverResponses = data.note?.responses || [];
-        // store raw server snapshot for index mapping
-        serverResponsesRef.current = serverResponses;
-        // If the response was just added by the current session user, display that response at the top.
-        const curUserId = session?.user?.id ?? (session?.user as Record<string, unknown>)?._id?.toString();
-        type RespShape = { author?: unknown; createdAt?: string | number | Date };
-        let newestMy: RespShape | null = null;
-        if (curUserId) {
-          const myResponses = serverResponses.filter((r: RespShape) => resolveId(r.author) === curUserId);
-          if (myResponses.length > 0) {
-            newestMy = myResponses.reduce((a: RespShape, b: RespShape) => {
-              return new Date(String(a.createdAt)).getTime() > new Date(String(b.createdAt)).getTime() ? a : b;
-            });
-          }
-        }
-
-        // Others (exclude the newestMy if present) sorted ascending
-        const others = serverResponses
-          .filter((r: RespShape) => !(newestMy && resolveId(r.author) === resolveId(newestMy.author) && String(r.createdAt) === String(newestMy.createdAt)))
-          .slice()
-          .sort((a: { createdAt?: string | number | Date }, b: { createdAt?: string | number | Date }) => {
-            return new Date(String(a.createdAt)).getTime() - new Date(String(b.createdAt)).getTime();
-          });
-
-        const ordered = newestMy ? [newestMy, ...others] : others;
-        setLocalResponses(ordered);
+        const serverResponses = (data.note?.responses || []) as NoteResponse[];
+        setLocalResponses(serverResponses);
         console.log("Add response fetch result:", data);
         setResponseText("");
         if (responseRef.current) responseRef.current.style.height = "";
@@ -782,13 +676,8 @@ export default function Response({ noteId, initialResponses, isPublic }: Respons
       const res = await fetch(`/api/notes/${noteId}`);
       if (res.ok) {
         const data = await res.json();
-        const serverResponses = data.note?.responses || [];
-        // update server snapshot
-        serverResponsesRef.current = serverResponses;
-        const sorted = serverResponses.slice().sort((a: { createdAt?: string | number | Date }, b: { createdAt?: string | number | Date }) => {
-          return new Date(String(a.createdAt)).getTime() - new Date(String(b.createdAt)).getTime();
-        });
-        setLocalResponses(sorted);
+        const serverResponses = (data.note?.responses || []) as NoteResponse[];
+        setLocalResponses(serverResponses);
       }
     } catch (error) {
       console.warn("Error refreshing responses:", error);
@@ -853,7 +742,8 @@ export default function Response({ noteId, initialResponses, isPublic }: Respons
           </p>
         ) : (
           localResponses.map((response, idx) => {
-              const respKey = resolveId((response as any)._id) ?? `${resolveId(response.author)}-${String(response.createdAt)}`;
+              const serverIdx = typeof response.serverIndex === "number" ? response.serverIndex : idx;
+              const respKey = `response-${serverIdx}-${String(response.createdAt ?? idx)}`;
               return (
                 <ResponseItem
                   key={respKey}
@@ -862,7 +752,6 @@ export default function Response({ noteId, initialResponses, isPublic }: Respons
                   noteId={noteId}
                   isPublic={isPublic}
                   onReplyAdded={refreshResponses}
-                  serverResponsesRef={serverResponsesRef}
                 />
               );
             })

@@ -2,6 +2,13 @@ import { auth } from "@/auth";
 import dbConnect from "@/lib/mongoose";
 import User, { IUser } from "@/models/User";
 import { NextResponse } from "next/server";
+import { createNotification } from "@/lib/utils/notifications";
+
+interface FollowRouteContext {
+  params: {
+    username: string;
+  };
+}
 
 async function findTarget(username: string) {
   return User.findOne({
@@ -12,16 +19,18 @@ async function findTarget(username: string) {
     .exec();
 }
 
-function buildStats(doc: any) {
+function buildStats(doc: Pick<IUser, "followers" | "following"> | null | undefined) {
+  const followersCount = Array.isArray(doc?.followers) ? doc.followers.length : 0;
+  const followingCount = Array.isArray(doc?.following) ? doc.following.length : 0;
   return {
-    followers: Array.isArray(doc.followers) ? doc.followers.length : 0,
-    following: Array.isArray(doc.following) ? doc.following.length : 0,
+    followers: followersCount,
+    following: followingCount,
   };
 }
 
 export async function POST(
   _request: Request,
-  context: any,
+  context: FollowRouteContext,
 ) {
   const session = await auth();
   const { username } = await context.params;
@@ -44,15 +53,27 @@ export async function POST(
       { status: 400 },
     );
   }
+  const alreadyFollowing = await User.exists({ _id: viewerId, following: target._id });
 
-   
-    await User.findByIdAndUpdate(viewerId, {
-      $addToSet: { following: target._id },
+  await User.findByIdAndUpdate(viewerId, {
+    $addToSet: { following: target._id },
+  });
+
+  await User.findByIdAndUpdate(target._id, {
+    $addToSet: { followers: viewerId },
+  });
+
+  if (!alreadyFollowing) {
+    const actorLabel = session.user.displayName ?? session.user.username ?? "Someone";
+    await createNotification({
+      actorId: viewerId,
+      recipientId: target._id.toString(),
+      type: "follow",
+      targetUrl: session.user.username ? `/profile/${session.user.username}` : `/profile/${viewerId}`,
+      message: `${actorLabel} started following you`,
+      dedupe: true,
     });
-    
-    await User.findByIdAndUpdate(target._id, {
-      $addToSet: { followers: viewerId },
-    });
+  }
 
   const updatedTarget = await User.findById(target._id)
     .select("followers following")
@@ -71,7 +92,7 @@ export async function POST(
 
 export async function DELETE(
   _request: Request,
-  context: any,
+  context: FollowRouteContext,
 ) {
   const { username } = await context.params;
   const session = await auth();

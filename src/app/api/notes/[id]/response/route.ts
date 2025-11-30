@@ -4,11 +4,67 @@ import mongoose from "mongoose";
 import { auth } from "@/auth";
 import dbConnect from "@/lib/mongoose";
 import Note from "@/models/Note";
+import User from "@/models/User";
+import { createNotification, buildNoteAnchorTarget, formatNoteTitleSnippet } from "@/lib/utils/notifications";
+
+interface RouteContext {
+  params: {
+    id: string;
+  };
+}
+
+async function serializeNoteResponses(note: any) {
+  const noteObj: any = typeof note.toObject === "function" ? note.toObject() : note;
+  const userIds = new Set<string>();
+
+  if (Array.isArray(noteObj.responses)) {
+    noteObj.responses.forEach((r: any) => {
+      if (r?.author) userIds.add(r.author.toString());
+      if (Array.isArray(r.replies)) {
+        r.replies.forEach((rep: any) => {
+          if (rep?.author) userIds.add(rep.author.toString());
+        });
+      }
+    });
+  }
+
+  const map = new Map<string, any>();
+  if (userIds.size > 0) {
+    const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
+      "username displayName image"
+    ).lean();
+    users.forEach((u: any) => map.set(u._id.toString(), u));
+  }
+
+  noteObj.responses = Array.isArray(noteObj.responses)
+    ? noteObj.responses.map((r: any, responseIndex: number) => ({
+        ...r,
+        likedBy: Array.isArray(r.likedBy)
+          ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
+          : [],
+        author: map.get(r.author?.toString?.()) || r.author,
+        serverIndex: responseIndex,
+        replies: Array.isArray(r.replies)
+          ? r.replies.map((rep: any, replyIndex: number) => ({
+              ...rep,
+              likedBy: Array.isArray(rep.likedBy)
+                ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
+                : [],
+              author: map.get(rep.author?.toString?.()) || rep.author,
+              serverResponseIndex: responseIndex,
+              serverReplyIndex: replyIndex,
+            }))
+          : [],
+      }))
+    : [];
+
+  return noteObj;
+}
 
 // POST: Add new response
 export async function POST(
   req: NextRequest,
-  context: any,
+  context: RouteContext,
 ) {
   try {
     const session = await auth();
@@ -65,42 +121,26 @@ export async function POST(
     note.responses.push(newResponse);
     await note.save();
 
-    // Return note with populated response/reply authors (manual populate)
-    const noteObj: any = note.toObject();
-    const userIds = new Set<string>();
-    noteObj.responses.forEach((r: any) => {
-      if (r?.author) userIds.add(r.author.toString());
-      if (Array.isArray(r.replies)) {
-        r.replies.forEach((rep: any) => {
-          if (rep?.author) userIds.add(rep.author.toString());
+    const responseIndex = note.responses.length - 1;
+    const noteIdStr = note._id.toString();
+    const actorLabel = session.user.displayName ?? session.user.username ?? "Someone";
+    if (note.isPublic) {
+      const ownerId = note.author?.toString?.();
+      if (ownerId && ownerId !== userId) {
+        const titleSuffix = formatNoteTitleSnippet(note.title ?? "");
+        await createNotification({
+          actorId: userId,
+          recipientId: ownerId,
+          type: "response",
+          noteId: noteIdStr,
+          responseIndex,
+          targetUrl: buildNoteAnchorTarget(noteIdStr, responseIndex),
+          message: `${actorLabel} responded to your note${titleSuffix || ""}`,
         });
       }
-    });
-
-    if (userIds.size > 0) {
-      const User = (await import("@/models/User")).default;
-      const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
-        "username displayName image"
-      ).lean();
-      const map = new Map(users.map((u: any) => [u._id.toString(), u]));
-
-      noteObj.responses = noteObj.responses.map((r: any) => ({
-        ...r,
-        likedBy: Array.isArray(r.likedBy)
-          ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
-          : [],
-        author: map.get(r.author?.toString?.()) || r.author,
-        replies: Array.isArray(r.replies)
-          ? r.replies.map((rep: any) => ({
-              ...rep,
-              likedBy: Array.isArray(rep.likedBy)
-                ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
-                : [],
-              author: map.get(rep.author?.toString?.()) || rep.author,
-            }))
-          : r.replies,
-      }));
     }
+
+    const noteObj = await serializeNoteResponses(note);
 
     return NextResponse.json(
       { message: "Response added", note: noteObj },
@@ -118,7 +158,7 @@ export async function POST(
 // PATCH: Like response/reply or add reply to response
 export async function PATCH(
   req: NextRequest,
-  context: any,
+  context: RouteContext,
 ) {
   try {
     const session = await auth();
@@ -142,6 +182,7 @@ export async function PATCH(
     }
 
     const userId = session.user.id ?? (session.user as Record<string, unknown>)?._id?.toString();
+    const actorLabel = session.user.displayName ?? session.user.username ?? "Someone";
 
     // Only public notes support likes
     if ((action === "like-response" || action === "like-reply") && !note.isPublic) {
@@ -192,42 +233,7 @@ export async function PATCH(
 
         await note.save();
 
-        // Return the updated response as a plain object with normalized likedBy and populated authors when possible
-        const noteObj: any = note.toObject();
-        const userIds = new Set<string>();
-        noteObj.responses.forEach((r: any) => {
-          if (r?.author) userIds.add(r.author.toString());
-          if (Array.isArray(r.replies)) {
-            r.replies.forEach((rep: any) => {
-              if (rep?.author) userIds.add(rep.author.toString());
-            });
-          }
-        });
-
-        if (userIds.size > 0) {
-          const User = (await import("@/models/User")).default;
-          const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
-            "username displayName image"
-          ).lean();
-          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
-
-          noteObj.responses = noteObj.responses.map((r: any) => ({
-            ...r,
-            likedBy: Array.isArray(r.likedBy)
-              ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
-              : [],
-            author: map.get(r.author?.toString?.()) || r.author,
-            replies: Array.isArray(r.replies)
-              ? r.replies.map((rep: any) => ({
-                  ...rep,
-                  likedBy: Array.isArray(rep.likedBy)
-                    ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
-                    : [],
-                  author: map.get(rep.author?.toString?.()) || rep.author,
-                }))
-              : r.replies,
-          }));
-        }
+        const noteObj = await serializeNoteResponses(note);
 
         return NextResponse.json({
           message: alreadyLiked ? "Response unliked" : "Response liked",
@@ -276,42 +282,7 @@ export async function PATCH(
 
         await note.save();
 
-        // Return updated response/reply serialized
-        const noteObj: any = note.toObject();
-        const userIds = new Set<string>();
-        noteObj.responses.forEach((r: any) => {
-          if (r?.author) userIds.add(r.author.toString());
-          if (Array.isArray(r.replies)) {
-            r.replies.forEach((rep: any) => {
-              if (rep?.author) userIds.add(rep.author.toString());
-            });
-          }
-        });
-
-        if (userIds.size > 0) {
-          const User = (await import("@/models/User")).default;
-          const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
-            "username displayName image"
-          ).lean();
-          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
-
-          noteObj.responses = noteObj.responses.map((r: any) => ({
-            ...r,
-            likedBy: Array.isArray(r.likedBy)
-              ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
-              : [],
-            author: map.get(r.author?.toString?.()) || r.author,
-            replies: Array.isArray(r.replies)
-              ? r.replies.map((rep: any) => ({
-                  ...rep,
-                  likedBy: Array.isArray(rep.likedBy)
-                    ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
-                    : [],
-                  author: map.get(rep.author?.toString?.()) || rep.author,
-                }))
-              : r.replies,
-          }));
-        }
+        const noteObj = await serializeNoteResponses(note);
 
         return NextResponse.json({
           message: alreadyLiked ? "Reply unliked" : "Reply liked",
@@ -364,42 +335,25 @@ export async function PATCH(
         note.responses[responseIndex].replies.push(newReply);
         await note.save();
 
-        // Return updated response with populated author objects (manual)
-        const noteObj: any = note.toObject();
-        const userIds = new Set<string>();
-        noteObj.responses.forEach((r: any) => {
-          if (r?.author) userIds.add(r.author.toString());
-          if (Array.isArray(r.replies)) {
-            r.replies.forEach((rep: any) => {
-              if (rep?.author) userIds.add(rep.author.toString());
-            });
-          }
-        });
-
-        if (userIds.size > 0) {
-          const User = (await import("@/models/User")).default;
-          const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
-            "username displayName image"
-          ).lean();
-          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
-
-          noteObj.responses = noteObj.responses.map((r: any) => ({
-              ...r,
-              likedBy: Array.isArray(r.likedBy)
-                ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
-                : [],
-              author: map.get(r.author?.toString?.()) || r.author,
-              replies: Array.isArray(r.replies)
-                ? r.replies.map((rep: any) => ({
-                    ...rep,
-                    likedBy: Array.isArray(rep.likedBy)
-                      ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
-                      : [],
-                    author: map.get(rep.author?.toString?.()) || rep.author,
-                  }))
-                : r.replies,
-            }));
+        const replyPosition = note.responses[responseIndex].replies.length - 1;
+        const responseOwnerId = note.responses[responseIndex].author?.toString?.();
+        const noteIdStr = note._id.toString();
+        const actorLabel = session.user.displayName ?? session.user.username ?? "Seseorang";
+        if (responseOwnerId && responseOwnerId !== userId) {
+          const titleSuffix = formatNoteTitleSnippet(note.title ?? "");
+          await createNotification({
+            actorId: userId,
+            recipientId: responseOwnerId,
+            type: "reply",
+            noteId: noteIdStr,
+            responseIndex,
+            replyIndex: replyPosition,
+            targetUrl: buildNoteAnchorTarget(noteIdStr, responseIndex, replyPosition),
+            message: `${actorLabel} replied to your response${titleSuffix || ""}`,
+          });
         }
+
+        const noteObj = await serializeNoteResponses(note);
 
         return NextResponse.json({
           message: "Reply added",
@@ -444,42 +398,7 @@ export async function PATCH(
         note.responses.splice(responseIndex, 1);
         await note.save();
 
-        // Return note with populated response/reply authors (manual populate)
-        const noteObjAfterDel: any = note.toObject();
-        const userIdsAfterDel = new Set<string>();
-        noteObjAfterDel.responses.forEach((r: any) => {
-          if (r?.author) userIdsAfterDel.add(r.author.toString());
-          if (Array.isArray(r.replies)) {
-            r.replies.forEach((rep: any) => {
-              if (rep?.author) userIdsAfterDel.add(rep.author.toString());
-            });
-          }
-        });
-
-        if (userIdsAfterDel.size > 0) {
-          const User = (await import("@/models/User")).default;
-          const users = await User.find({ _id: { $in: Array.from(userIdsAfterDel) } }).select(
-            "username displayName image"
-          ).lean();
-          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
-
-          noteObjAfterDel.responses = noteObjAfterDel.responses.map((r: any) => ({
-            ...r,
-            likedBy: Array.isArray(r.likedBy)
-              ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
-              : [],
-            author: map.get(r.author?.toString?.()) || r.author,
-            replies: Array.isArray(r.replies)
-              ? r.replies.map((rep: any) => ({
-                  ...rep,
-                  likedBy: Array.isArray(rep.likedBy)
-                    ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
-                    : [],
-                  author: map.get(rep.author?.toString?.()) || rep.author,
-                }))
-              : r.replies,
-          }));
-        }
+        const noteObjAfterDel = await serializeNoteResponses(note);
 
         return NextResponse.json({
           message: "Response deleted",
@@ -526,42 +445,7 @@ export async function PATCH(
         note.responses[responseIndex].replies.splice(replyIndex, 1);
         await note.save();
 
-        // Return note with populated response/reply authors (manual populate)
-        const noteObjAfterReplyDel: any = note.toObject();
-        const userIdsAfterReplyDel = new Set<string>();
-        noteObjAfterReplyDel.responses.forEach((r: any) => {
-          if (r?.author) userIdsAfterReplyDel.add(r.author.toString());
-          if (Array.isArray(r.replies)) {
-            r.replies.forEach((rep: any) => {
-              if (rep?.author) userIdsAfterReplyDel.add(rep.author.toString());
-            });
-          }
-        });
-
-        if (userIdsAfterReplyDel.size > 0) {
-          const User = (await import("@/models/User")).default;
-          const users = await User.find({ _id: { $in: Array.from(userIdsAfterReplyDel) } }).select(
-            "username displayName image"
-          ).lean();
-          const map = new Map(users.map((u: any) => [u._id.toString(), u]));
-
-          noteObjAfterReplyDel.responses = noteObjAfterReplyDel.responses.map((r: any) => ({
-            ...r,
-            likedBy: Array.isArray(r.likedBy)
-              ? r.likedBy.map((id: any) => id?.toString?.() ?? "")
-              : [],
-            author: map.get(r.author?.toString?.()) || r.author,
-            replies: Array.isArray(r.replies)
-              ? r.replies.map((rep: any) => ({
-                  ...rep,
-                  likedBy: Array.isArray(rep.likedBy)
-                    ? rep.likedBy.map((id: any) => id?.toString?.() ?? "")
-                    : [],
-                  author: map.get(rep.author?.toString?.()) || rep.author,
-                }))
-              : r.replies,
-          }));
-        }
+        const noteObjAfterReplyDel = await serializeNoteResponses(note);
 
         return NextResponse.json({
           message: "Reply deleted",

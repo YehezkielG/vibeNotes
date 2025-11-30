@@ -12,6 +12,8 @@ type NoteResponseReply = {
   likes: number;
   likedBy: string[];
   createdAt: string;
+  serverResponseIndex?: number;
+  serverReplyIndex?: number;
 };
 
 type NoteResponse = {
@@ -20,6 +22,7 @@ type NoteResponse = {
   likes: number;
   likedBy: string[];
   createdAt: string;
+  serverIndex?: number;
   replies: NoteResponseReply[];
 };
 
@@ -35,4 +38,18 @@ type NoteType = {
   likedBy?: (string | { toString(): string })[];
   tags?: string[];
   responses: NoteResponse[];
+};
+
+type NotificationItem = {
+  id: string;
+  type: 'like' | 'response' | 'reply' | 'follow';
+  message: string;
+  targetUrl: string;
+  isRead: boolean;
+  createdAt: string;
+  actor?: {
+    username?: string | null;
+    displayName?: string | null;
+    image?: string | null;
+  } | null;
 };

@@ -3,10 +3,17 @@ import mongoose from "mongoose";
 import { auth } from "@/auth";
 import dbConnect from "@/lib/mongoose";
 import Note from "@/models/Note";
+import { createNotification, buildNoteAnchorTarget, formatNoteTitleSnippet } from "@/lib/utils/notifications";
+
+interface LikeRouteContext {
+  params: {
+    id: string;
+  };
+}
 
 export async function POST(
   _request: Request,
-  context: any,
+  context: LikeRouteContext,
 ) {
   try {
     const session = await auth();
@@ -21,12 +28,13 @@ export async function POST(
 
     await dbConnect();
 
-    const note = await Note.findById(noteId).select("likes likedBy");
+    const note = await Note.findById(noteId).select("likes likedBy author isPublic title");
     if (!note) {
       return NextResponse.json({ message: "Note not found." }, { status: 404 });
     }
 
     const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userIdStr = userId.toString();
     const alreadyLiked = note.likedBy.some((id) => id.equals(userId));
 
     if (alreadyLiked) {
@@ -38,6 +46,22 @@ export async function POST(
     }
 
     await note.save();
+
+    if (!alreadyLiked && note.isPublic && note.author) {
+      const ownerId = note.author.toString();
+      if (ownerId !== userIdStr) {
+        const actorLabel = session.user.displayName ?? session.user.username ?? "Someone";
+        const titleSuffix = formatNoteTitleSnippet(note.title ?? "");
+        await createNotification({
+          actorId: session.user.id,
+          recipientId: ownerId,
+          type: "like",
+          noteId,
+          targetUrl: buildNoteAnchorTarget(noteId),
+          message: `${actorLabel} liked your note${titleSuffix || ""}`,
+        });
+      }
+    }
 
     return NextResponse.json(
       { liked: !alreadyLiked, likes: note.likes ?? 0 },

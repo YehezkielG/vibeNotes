@@ -3,7 +3,6 @@ import dbConnect from '@/lib/mongoose';
 
 export interface IUser extends Document {
     _id: Schema.Types.ObjectId;
-    name?: string;
     email: string;
     emailVerified?: Date;
     image?: string;
@@ -11,6 +10,7 @@ export interface IUser extends Document {
     displayName?: string;
     bio?: string;
     isOnboarded: boolean;
+  notificationsEnabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     followers?: Schema.Types.ObjectId[];
@@ -18,7 +18,6 @@ export interface IUser extends Document {
 }
 
 const UserSchema = new Schema<IUser>({
-    name: String,
     email: {
         type: String,
         unique: true,
@@ -38,6 +37,10 @@ const UserSchema = new Schema<IUser>({
     isOnboarded: {
         type: Boolean,
         default: false,
+    },
+    notificationsEnabled: {
+      type: Boolean,
+      default: true,
     },  
 }, {
     timestamps: true,

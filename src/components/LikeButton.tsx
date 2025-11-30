@@ -35,6 +35,10 @@ export default function LikeButton({ noteId, likes, likedBy = [], className }: L
       return;
     }
     if (!session?.user?.id || pending) return;
+    if (!noteId) {
+      console.warn("Cannot toggle like without a valid note id");
+      return;
+    }
 
     try {
       setPending(true);

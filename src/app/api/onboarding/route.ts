@@ -64,7 +64,6 @@ export async function POST(request: Request) {
       $set: {
         username: username,
         displayName: normalizedDisplayName,
-        name: normalizedDisplayName,
         bio: bio,
         image: image || session.user.image,
         isOnboarded: true,

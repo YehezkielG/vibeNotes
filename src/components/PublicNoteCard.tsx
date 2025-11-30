@@ -10,7 +10,7 @@ import {
   getLabelColor,
   extractDominantEmotion,
 } from "@/lib/utils/emotionMapping";
-import { formatCreatedAt, canEditNote } from "@/lib/utils/notesLib";
+import { formatCreatedAt, canEditNote, normalizeNoteId } from "@/lib/utils/notesLib";
 import LikeButton from "@/components/LikeButton";
 
 interface PublicNoteCardProps {
@@ -56,6 +56,7 @@ export default function PublicNoteCard({
   // Show full content (no truncation)
 
   const canEdit = canEditNote(note.createdAt);
+  const noteId = normalizeNoteId(note._id);
 
   return (
     <article className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-5 transition-all hover:shadow-md hover:border-gray-300">
@@ -113,7 +114,7 @@ export default function PublicNoteCard({
       </div>
 
       {/* Title */}
-      <Link href={`/note/${note._id}`} className="block group">
+      <Link href={`/note/${noteId}`} className="block group">
         <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
           {note.title || "(Untitled note)"}
         </h3>
@@ -187,19 +188,17 @@ export default function PublicNoteCard({
       {/* Action Buttons: Like, Comment, Share */}
       <div className="flex items-center gap-6 pt-3 border-t border-gray-100">
         <LikeButton
-          noteId={note._id}
+          noteId={noteId}
           likes={note.likes ?? 0}
           likedBy={likedBy}
         />
-
-        <button className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors group">
+  <Link href={`/note/${noteId}#responses`} className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors group">
           <MessageCircle
             size={18}
             className="group-hover:scale-110 transition-transform"
           />
           <span className="text-sm font-medium">{note.responses?.length || 0}</span>
-        </button>
-
+        </Link>
         <button className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors group">
           <Share2
             size={18}

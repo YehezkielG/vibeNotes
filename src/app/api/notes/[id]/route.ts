@@ -46,15 +46,18 @@ export async function GET(
       const map = new Map(users.map((u: any) => [u._id.toString(), u]));
 
       noteObj.responses = Array.isArray(noteObj.responses)
-        ? noteObj.responses.map((r: any) => ({
+        ? noteObj.responses.map((r: any, responseIndex: number) => ({
             ...r,
             likedBy: Array.isArray(r.likedBy) ? r.likedBy.map((id: any) => id?.toString?.() ?? "") : [],
             author: map.get(r.author?.toString?.()) || r.author,
+            serverIndex: responseIndex,
             replies: Array.isArray(r.replies)
-              ? r.replies.map((rep: any) => ({
+              ? r.replies.map((rep: any, replyIndex: number) => ({
                   ...rep,
                   likedBy: Array.isArray(rep.likedBy) ? rep.likedBy.map((id: any) => id?.toString?.() ?? "") : [],
                   author: map.get(rep.author?.toString?.()) || rep.author,
+                  serverResponseIndex: responseIndex,
+                  serverReplyIndex: replyIndex,
                 }))
               : r.replies,
           }))

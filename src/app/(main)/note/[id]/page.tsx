@@ -58,18 +58,21 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
       const map = new Map(users.map((u: any) => [String(u._id), u]));
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      note.responses = note.responses.map((r: any) => ({
+      note.responses = note.responses.map((r: any, responseIndex: number) => ({
         ...r,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         likedBy: Array.isArray(r.likedBy) ? r.likedBy.map((id: any) => String(id)) : [],
         author: map.get(String(r.author)) || r.author,
+        serverIndex: responseIndex,
         replies: Array.isArray(r.replies)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ? r.replies.map((rep: any) => ({
+          ? r.replies.map((rep: any, replyIndex: number) => ({
               ...rep,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               likedBy: Array.isArray(rep.likedBy) ? rep.likedBy.map((id: any) => String(id)) : [],
               author: map.get(String(rep.author)) || rep.author,
+              serverResponseIndex: responseIndex,
+              serverReplyIndex: replyIndex,
             }))
           : [],
       }));
@@ -78,12 +81,13 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
 
   // Serialize responses for client component (no Mongoose objects)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const serialResponses = (note.responses || []).map((r: any) => ({
+  const serialResponses = (note.responses || []).map((r: any, responseIndex: number) => ({
     text: r.text,
     likes: r.likes ?? 0,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     likedBy: Array.isArray(r.likedBy) ? r.likedBy.map((id: any) => String(id)) : [],
     createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : null,
+    serverIndex: typeof r.serverIndex === "number" ? r.serverIndex : responseIndex,
     author:
       r.author && typeof r.author === "object"
         ? {
@@ -95,12 +99,20 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
         : String(r.author ?? ""),
     replies: Array.isArray(r.replies)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? r.replies.map((rep: any) => ({
+      ? r.replies.map((rep: any, replyIndex: number) => ({
           text: rep.text,
           likes: rep.likes ?? 0,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           likedBy: Array.isArray(rep.likedBy) ? rep.likedBy.map((id: any) => String(id)) : [],
           createdAt: rep.createdAt ? new Date(rep.createdAt).toISOString() : null,
+          serverResponseIndex:
+            typeof rep.serverResponseIndex === "number"
+              ? rep.serverResponseIndex
+              : typeof r.serverIndex === "number"
+                ? r.serverIndex
+                : responseIndex,
+          serverReplyIndex:
+            typeof rep.serverReplyIndex === "number" ? rep.serverReplyIndex : replyIndex,
           author:
             rep.author && typeof rep.author === "object"
               ? {
