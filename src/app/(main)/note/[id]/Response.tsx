@@ -250,7 +250,7 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
   return (
     <div 
       id={responseAnchorId}
-      className="group border-l-2 border-gray-100 pl-4 py-3 relative note-anchor"
+      className="group border-l-2 border-variant pl-4 py-3 relative note-anchor"
       onContextMenu={handleContextMenu}
       onTouchStart={handleLongPressStart}
       onTouchEnd={handleLongPressEnd}
@@ -260,13 +260,13 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
       {showContextMenu && canDelete && (
         <div
           ref={contextMenuRef}
-          className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+          className="fixed z-50 bg-card border border-variant rounded-lg shadow-lg py-1 min-w-[120px]"
           style={{ left: `${contextMenuPos.x}px`, top: `${contextMenuPos.y}px` }}
         >
           <button
             onClick={handleDeleteResponse}
             disabled={isDeleting}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+            className="w-full px-4 py-2 text-left text-sm text-red-600 disabled:opacity-50"
           >
             {isDeleting ? "Deleting..." : "Delete"}
           </button>
@@ -289,18 +289,18 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
               </div>
             </Link>
           ) : null}
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <Link href={`/profile/${authorUsername}`} className="font-semibold hover:text-indigo-600">
+          <div className="flex items-center gap-2 text-xs text-muted">
+            <Link href={`/profile/${authorUsername}`} className="font-semibold hover:text-accent">
               {authorDisplay}
             </Link>
-            <span className="text-gray-400">•</span>
-            <span className="text-gray-500">{formatCreatedAt(response.createdAt)}</span>
+            <span className="text-muted">•</span>
+            <span className="text-muted">{formatCreatedAt(response.createdAt)}</span>
           </div>
         </div>
       )}
 
       <div className="flex items-start justify-between gap-3">
-        <p className="text-gray-700 text-sm leading-relaxed flex-1" style={{ whiteSpace: "pre-wrap" }}>{response.text}</p>
+        <p className="text-foreground text-sm leading-relaxed flex-1" style={{ whiteSpace: "pre-wrap" }}>{response.text}</p>
         {isPublic && (
           <button
             onClick={handleLikeResponse}
@@ -344,7 +344,7 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
           {!showReplyBox ? (
             <button
               onClick={() => setShowReplyBox(true)}
-              className="text-xs text-gray-500 hover:text-indigo-600 flex items-center gap-1"
+              className="text-xs text-muted hover:text-accent flex items-center gap-1"
             >
               <MessageCircle size={12} />
               Reply
@@ -361,7 +361,7 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
                 placeholder="Write a reply..."
                 rows={1}
                 style={{ overflow: "hidden" }}
-                className="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="flex-1 text-sm px-3 py-2 border border-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none bg-card text-foreground"
                 onKeyDown={(e) => {
                   // Enter submits; Shift+Enter inserts a newline
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -373,7 +373,7 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
               <button
                 onClick={handleAddReply}
                 disabled={!replyText.trim() || isSubmittingReply}
-                className="self-start px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="self-start px-3 py-2 bg-accent text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send size={14} />
               </button>
@@ -383,7 +383,7 @@ function ResponseItem({ response, responseIndex, noteId, isPublic, onReplyAdded 
                   setReplyText("");
                 }}
                 aria-label="Cancel reply"
-                className="self-start w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-800"
+                className="self-start w-10 h-10 flex items-center justify-center text-muted hover:text-foreground"
               >
                 <X size={16} />
               </button>
@@ -568,7 +568,7 @@ function ReplyItem({ reply, replyIndex, responseIndex, parentServerIndex, noteId
   return (
     <div 
       id={replyAnchorId}
-      className="group bg-gray-50 rounded-lg p-2 relative note-anchor"
+      className="group bg-gray-400/25 rounded-lg p-2 relative note-anchor"
       onContextMenu={handleContextMenu}
       onTouchStart={handleLongPressStart}
       onTouchEnd={handleLongPressEnd}
@@ -578,13 +578,13 @@ function ReplyItem({ reply, replyIndex, responseIndex, parentServerIndex, noteId
       {showContextMenu && canDelete && (
         <div
           ref={contextMenuRef}
-          className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+          className="fixed z-50 bg-card border border-variant rounded-lg shadow-lg py-1 min-w-[120px]"
           style={{ left: `${contextMenuPos.x}px`, top: `${contextMenuPos.y}px` }}
         >
           <button
             onClick={handleDeleteReply}
             disabled={isDeleting}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+            className="w-full px-4 py-2 text-left text-sm text-red-600 disabled:opacity-50"
           >
             {isDeleting ? "Deleting..." : "Delete"}
           </button>
@@ -607,24 +607,24 @@ function ReplyItem({ reply, replyIndex, responseIndex, parentServerIndex, noteId
               </div>
             </Link>
           ) : null}
-          <div className="flex items-center gap-1.5 text-xs text-gray-600">
-            <Link href={`/profile/${authorUsername}`} className="font-semibold hover:text-indigo-600">
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <Link href={`/profile/${authorUsername}`} className="font-semibold hover:text-accent">
               {authorDisplay}
             </Link>
-            <span className="text-gray-400">•</span>
-            <span className="text-gray-500">{formatCreatedAt(reply.createdAt)}</span>
+            <span className="text-muted">•</span>
+            <span className="text-muted">{formatCreatedAt(reply.createdAt)}</span>
           </div>
         </div>
       )}
       
       <div className="flex items-start justify-between gap-2">
-        <p className="text-gray-600 text-xs flex-1" style={{ whiteSpace: "pre-wrap" }}>{reply.text}</p>
+        <p className="text-muted text-sm flex-1" style={{ whiteSpace: "pre-wrap" }}>{reply.text}</p>
         {isPublic && (
           <button
             onClick={handleLikeReply}
             disabled={isLiking}
             className={`shrink-0 flex items-center gap-1 transition-colors ${
-              hasLiked ? "text-red-500" : "text-gray-400 hover:text-red-500"
+              hasLiked ? "text-red-500" : "text-muted hover:text-red-500"
             }`}
           >
             <Heart size={12} className={hasLiked ? "fill-red-500 text-red-500" : ""} />
@@ -691,14 +691,14 @@ export default function Response({ noteId, initialResponses = [], isPublic }: Re
 
   return (
     <section className="mt-8">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-        <MessageCircle size={20} className="text-gray-600" />
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <MessageCircle size={20} className="text-muted" />
         {sectionTitle} ({localResponses.length})
       </h3>
 
       {/* Add Response Form */}
       {session?.user && (
-        <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+        <div className="mb-6 bg-card border border-variant rounded-lg p-4 shadow-sm">
           <textarea
             ref={responseRef}
             value={responseText}
@@ -712,7 +712,7 @@ export default function Response({ noteId, initialResponses = [], isPublic }: Re
             placeholder={placeholder}
             rows={1}
             style={{ overflow: "hidden" }}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full px-3 py-2 border border-variant rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent text-sm"
             onKeyDown={(e) => {
               // Enter submits; Shift+Enter inserts a newline
               if (e.key === "Enter" && !e.shiftKey) {
@@ -721,11 +721,11 @@ export default function Response({ noteId, initialResponses = [], isPublic }: Re
               }
             }}
           />
-          <div className="flex justify-end mt-2">
+            <div className="flex justify-end mt-2">
             <button
               onClick={handleAddResponse}
               disabled={!responseText.trim() || isSubmitting}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
+              className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
             >
               <Send size={14} />
               {isSubmitting ? "Posting..." : `Add ${isPublic ? "Response" : "Reflection"}`}
@@ -737,7 +737,7 @@ export default function Response({ noteId, initialResponses = [], isPublic }: Re
       {/* Responses List */}
       <div className="space-y-4">
         {localResponses.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-8">
+          <p className="text-muted text-sm text-center py-8">
             No {sectionTitle.toLowerCase()} yet. Be the first to {isPublic ? "respond" : "reflect"}!
           </p>
         ) : (

@@ -113,7 +113,6 @@ export async function PATCH(
     }
 
     // Check if within 10-minute edit window for public notes only.
-    // Private notes may be edited at any time by their owner.
     if (note.isPublic) {
       if (!canEditNote(note.createdAt)) {
         return NextResponse.json(

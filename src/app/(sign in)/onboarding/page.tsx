@@ -8,7 +8,6 @@ import type { IUser } from "@/models/User";
 import AvatarUpload from "@/components/AvatarUpload";
 
 // This is your "Edit Profile" page at /profile/me
-// It is displayed INSIDE the main layout (with Sidebar)
 
 
 export default function EditProfilePage() {

@@ -15,6 +15,8 @@
   --card: #ffffff;
   --muted: #f7f7f7;
   --border: #e5e7eb;
+  --accent: #6366f1; /* default light accent (indigo-500) */
+  --accent-weak: rgba(99,102,241,0.08);
   --scrollbar-size: 12px;
   --scrollbar-track: rgba(0,0,0,0.06);
   --scrollbar-thumb: rgba(0,0,0,0.22);
@@ -23,11 +25,16 @@
 }
 
 .dark {
-  --background: #141414;
-  --foreground: #ededed;
-  --card: #1f1f1f;
-  --muted: #1a1a1a;
-  --border: rgba(255,255,255,0.06);
+  /* Dark palette tuned to match screenshot: very dark page background, */
+  --background: #0b0b0b;    /* page background */
+  --surface: #0f0f10;       /* slightly lighter surface */
+  --card: #141414;          /* card / panel background */
+  --muted: #0f0f0f;         /* skeleton / muted surfaces */
+  --foreground: #eaeef2;    /* main text */
+  --muted-foreground: rgba(234,238,242,0.75);
+  --border: rgba(255,255,255,0.04); /* subtle border */
+  --accent: #8b5cf6;        /* purple accent used in screenshot */
+  --accent-weak: rgba(139,92,246,0.14);
   --scrollbar-track: rgba(255,255,255,0.06);
   --scrollbar-thumb: rgba(255,255,255,0.22);
   --scrollbar-thumb-hover: rgba(255,255,255,0.34);
@@ -39,23 +46,44 @@ body {
   color: var(--foreground);
 }
 
-/* Surface / card helpers using CSS variables so components can remain using
-  utility classes while still getting consistent colors in dark mode. */
+/* Surface / card helpers using CSS variables so components can remain using */
 .bg-surface { background-color: var(--background) !important; }
 .bg-card { background-color: var(--card) !important; }
 .muted-bg { background-color: var(--muted) !important; }
 .border-variant { border-color: var(--border) !important; }
 
-/* Dark mode overrides for common Tailwind light-only utilities. This
-  helps quickly neutralize leftover `bg-white` classes without editing
-  every file. */
+/* Skeleton helper: default light tone, maps to muted dark tone in dark mode */
+.skeleton-bg { background-color: #e6e6e6; }
+.dark .skeleton-bg { background-color: var(--muted) !important; }
+
+/* Accent mappings */
+.text-accent { color: var(--accent) !important; }
+.bg-accent { background-color: var(--accent) !important; }
+.accent-weak { background-color: var(--accent-weak) !important; }
+
+/* Convenience text helpers for theme-aware text colors */
+.text-foreground { color: var(--foreground) !important; }
+.text-muted { color: var(--muted-foreground) !important; }
+
+/* Dark mode overrides for common Tailwind light-only utilities. This */
 .dark .bg-white { background-color: var(--card) !important; color: var(--foreground) !important; }
-.dark .bg-white\/70 { background-color: rgba(255,255,255,0.07) !important; }
-.dark .bg-white\/80 { background-color: rgba(255,255,255,0.06) !important; }
+.dark .bg-white\/70 { background-color: rgba(255,255,255,0.03) !important; }
+.dark .bg-white\/80 { background-color: rgba(255,255,255,0.04) !important; }
 .dark .border-gray-200 { border-color: var(--border) !important; }
 
-/* Text color overrides in dark mode for common utility classes so content
-   remains readable even when components still use light-mode classes. */
+/* Map common Tailwind indigo/violet accents to our accent variable in dark mode */
+.dark .text-indigo-600,
+.dark .text-indigo-500,
+.dark .text-violet-500,
+.dark .text-violet-600 {
+  color: var(--accent) !important;
+}
+.dark .bg-indigo-600,
+.dark .bg-violet-500 {
+  background-color: var(--accent) !important;
+}
+
+/* Text color overrides in dark mode for common utility classes so content */
 .dark .text-gray-800,
 .dark .text-gray-900,
 .dark .text-black {
@@ -71,8 +99,7 @@ body {
   color: rgba(255,255,255,0.96) !important;
 }
 
-/* Skeleton / pulse adjustments: map pale/light skeleton backgrounds to muted
-   dark surfaces so loading states don't appear too bright on dark backgrounds. */
+/* Skeleton / pulse adjustments: map pale/light skeleton backgrounds to muted */
 .dark .animate-pulse .bg-white,
 .dark .animate-pulse .bg-white\/80,
 .dark .animate-pulse .bg-white\/70,
@@ -83,6 +110,19 @@ body {
 .dark .rounded-xl.shadow-sm,
 .dark .shadow-sm {
   box-shadow: 0 1px 2px rgba(0,0,0,0.6) !important;
+}
+
+/* Recharts: reduce pie chart label and legend text size and set color for dark mode */
+.recharts-pie text,
+.recharts-label text,
+.recharts-legend-item text,
+.recharts-text {
+  font-size: 12px !important;
+  fill: var(--foreground) !important;
+}
+.recharts-legend-item text {
+  fill: var(--muted-foreground) !important;
+  font-size: 11px !important;
 }
 
 
@@ -129,19 +169,14 @@ body {
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Mobile typography normalization:
-   On small screens (below Tailwind's `lg` breakpoint) force any
-   larger-than-base text utilities back to the default base font size
-   (1rem) so the UI reads at default mobile size. Keep smaller sizes
-   (`text-sm`, `text-xs`) intact.
-*/
+/* Mobile typography normalization: */
+
 @media (max-width: 1023px) {
   html, body {
     font-size: 16px;
   }
-
-  /* Reset larger Tailwind text utilities to base on mobile. Use
-     !important to override utility classes where necessary. */
+  /* Force `text-sm` (0.875rem) for any utility that is `text-base` or larger */
+  .text-base,
   .text-lg,
   .text-xl,
   .text-2xl,
@@ -151,36 +186,29 @@ body {
   .text-6xl,
   .text-7xl,
   .text-8xl {
-    font-size: 1rem !important;
-    line-height: 1.5 !important;
+    font-size: 0.875rem !important; /* text-sm */
+    line-height: 1.35 !important;
   }
 
-  /* Optional: normalize headings that may not use text-* classes */
-  h1, h2, h3, h4 {
-    font-size: 1rem !important;
-    line-height: 1.4 !important;
+  /* Normalize headings which may not use text-* utilities */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 0.875rem !important;
+    line-height: 1.35 !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* Ensure common text elements default to text-sm on mobile unless the */
+  p:not(.text-xs),
+  a:not(.text-xs),
+  span:not(.text-xs),
+  li:not(.text-xs),
+  button:not(.text-xs),
+  label:not(.text-xs),
+  input:not(.text-xs),
+  textarea:not(.text-xs),
+  div:not(.text-xs) {
+    font-size: 0.875rem !important;
+    line-height: 1.35 !important;
   }
 }
-
-  .note-anchor {
-    scroll-margin-top: 96px;
-  }
-
-  .note-anchor:target {
-    animation: anchorHighlight 2s ease;
-    background-color: rgba(254, 243, 199, 0.7);
-    border-radius: 0.75rem;
-    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
-  }
-
-  @keyframes anchorHighlight {
-    0% {
-      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
-    }
-    50% {
-      box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
-    }
-  }

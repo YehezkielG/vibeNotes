@@ -123,15 +123,15 @@ export default function NotificationsPage() {
     <div className="container mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Notifications</h1>
-          <p className="text-sm text-gray-500">Stay in the loop with the latest activity.</p>
+          <h1 className="text-2xl font-semibold text-foreground">Notifications</h1>
+          <p className="text-sm text-muted">Stay in the loop with the latest activity.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => markAsRead(undefined, true)}
             disabled={unreadCount === 0}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-variant px-3 py-2 text-sm text-muted hover:border-variant disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckCircle2 size={16} />
             Mark all as read
@@ -140,33 +140,34 @@ export default function NotificationsPage() {
             type="button"
             onClick={() => deleteNotifications(undefined, true)}
             disabled={notifications.length === 0 || isDeletingAll}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-variant px-3 py-2 text-sm text-muted hover:border-variant disabled:cursor-not-allowed disabled:opacity-50"
           >
             Delete all
           </button>
         </div>
       </div>
 
-      <div className="mb-5 rounded-lg border border-gray-200 bg-white px-4 py-3">
-        <label className="flex items-center gap-3 text-sm text-gray-700">
+      <div className="mb-5 rounded-lg px-4 py-3">
+        <label className="flex items-center gap-3 text-sm text-foreground">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            style={{ accentColor: "var(--accent)" }}
+            className="h-4 w-4 rounded border-gray-300"
             checked={effectiveEnabled}
             onChange={toggleNotifications}
             disabled={isToggling}
           />
           <span>Enable in-app notifications</span>
         </label>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-muted">
           Uncheck the box if you don&apos;t want to receive new alerts about likes, replies, or follows.
         </p>
       </div>
 
       {!effectiveEnabled && (
-        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mb-5 rounded-lg border border-variant accent-weak  text-sm text-accent p-2">
           <p className="font-medium">Notifications are disabled.</p>
-          <p className="text-amber-700">Turn them back on to receive new alerts.</p>
+          <p className="text-accent">Turn them back on to receive new alerts.</p>
         </div>
       )}
 
@@ -184,9 +185,9 @@ export default function NotificationsPage() {
       )}
 
       {!isLoading && notifications.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center text-gray-500">
-          <BellOff size={32} className="mb-4 text-gray-400" />
-          <p className="font-medium">No notifications yet.</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-variant bg-card py-16 text-center text-muted">
+          <BellOff size={32} className="mb-4 text-muted" />
+          <p className="font-medium text-foreground">No notifications yet.</p>
           <p className="text-sm">Recent activity will show up here.</p>
         </div>
       )}
@@ -196,9 +197,7 @@ export default function NotificationsPage() {
           <li key={item.id}>
             <Link
               href={item.targetUrl}
-              className={`flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors ${
-                item.isRead ? "border-gray-200 bg-white" : "border-indigo-200 bg-indigo-50"
-              }`}
+              className={`flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors border-variant`}
               onClick={() => {
                 if (!item.isRead) markAsRead(item.id);
               }}
@@ -214,8 +213,8 @@ export default function NotificationsPage() {
                 {!item.isRead && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500" />}
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-800">{item.message}</p>
-                <p className="text-xs text-gray-500">{formatCreatedAt(item.createdAt)}</p>
+                <p className="text-sm text-foreground">{item.message}</p>
+                <p className="text-xs text-muted">{formatCreatedAt(item.createdAt)}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
                 {!item.isRead && (
@@ -225,7 +224,7 @@ export default function NotificationsPage() {
                       e.preventDefault();
                       markAsRead(item.id);
                     }}
-                    className="text-xs font-medium text-indigo-600 hover:underline"
+                    className="text-xs font-medium text-accent hover:underline"
                   >
                     Mark as read
                   </button>
@@ -239,7 +238,7 @@ export default function NotificationsPage() {
                     deleteNotifications(item.id);
                   }}
                   disabled={deletingId === item.id}
-                  className="text-gray-400 transition hover:text-gray-600 disabled:cursor-not-allowed"
+                  className="text-muted transition hover:text-foreground disabled:cursor-not-allowed"
                 >
                   {deletingId === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                 </button>

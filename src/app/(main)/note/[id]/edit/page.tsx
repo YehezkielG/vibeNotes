@@ -89,7 +89,6 @@ export default function EditNotePage() {
   }, [noteId, authStatus, session, router]);
 
   // No visible countdown: keep server/client check for edit eligibility,
-  // but do not show a live timer in the UI.
 
   useEffect(() => {
     if (focusMode) {

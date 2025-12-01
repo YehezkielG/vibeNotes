@@ -39,7 +39,7 @@ export default function NoteDetailLoading() {
       </article>
     
         {/* Emotion Tags */}
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap animate-pulse">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-8 w-28 rounded-2xl bg-gray-200" />
           ))}

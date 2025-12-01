@@ -4,7 +4,6 @@ import { transformAvatar } from "@/lib/utils/image";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { /* icons intentionally removed from sidebar */ } from "lucide-react";
 import SuggestionsSkeleton from "@/components/skeletons/SuggestionsSkeleton";
 
 type Suggestion = {
@@ -102,8 +101,8 @@ export default function RightSidebar() {
                 }, [])
                 .slice(0, 6)
                 .map((s) => (
-                  <div key={s._id} className="inline-block bg-white w-[150px] rounded-lg border border-gray-100 p-4 text-center h-full hover:shadow-md transition-shadow">
-                    <Link href={`/profile/${s.username}`} className="flex flex-col items-center gap-2 w-full">
+                  <div key={s._id} className="inline-block bg-white w-[150px] rounded-lg  p-4 text-center h-full hover:shadow-md transition-shadow">
+                    <Link href={`/profile/${s.username}`} className="flex flex-col items-center w-full">
                       <div className="w-20 h-20 rounded-full overflow-hidden shrink-0">
                         <Image
                           src={transformAvatar(s.image || "/default-profile.png", 96)}
@@ -114,7 +113,7 @@ export default function RightSidebar() {
                         />
                       </div>
                       <div className="mt-2 text-sm font-semibold text-gray-800 truncate max-w-full" title={s.displayName}>{s.displayName}</div>
-                      <div className="text-xs text-gray-500 truncate max-w-full">@{s.username}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-full mb-2">@{s.username}</div>
                     </Link>
                     <div className="w-full mt-auto">
                       <FollowButton username={s.username} initialFollowing={!!s.isFollowing} onToggle={(isFollowing) => {
@@ -156,7 +155,7 @@ function FollowButton({ username, initialFollowing, onToggle }: { username: stri
     <button
       onClick={handleClick}
       disabled={loading}
-      className={`w-full lg:w-auto text-xs font-medium px-3 py-1 rounded-lg ${isFollowing ? 'bg-gray-200 text-gray-700' : 'bg-indigo-600 text-white'}`}
+      className={`w-full lg:w-auto text-xs font-medium px-3 py-1 rounded-lg ${isFollowing ? 'bg-gray-300/30 text-gray-800' : 'bg-indigo-600 text-white'}`}
     >
       {isFollowing ? 'Following' : 'Follow'}
     </button>

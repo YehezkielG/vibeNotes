@@ -41,7 +41,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} antialiased px-2 mainBody bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100`}>
+      <body className={`${inter.variable} antialiased mainBody bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100`}>
         <AuthSessionProvider>
           <ThemeProvider>
             {/* Responsive shell: stack on mobile, three-column on lg */}

@@ -42,7 +42,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
   }
 
   return (
-    <article className="relative rounded-2xl p-6 shadow-sm border border-gray-100 transition-all hover:shadow-md">
+    <article className="relative rounded-2xl p-6 shadow-md dark:border-gray-600 border-gray-200 border bg-card transition-all hover:shadow-md">
       {/* Header dengan Lock Icon */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2 text-gray-500">
@@ -77,7 +77,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
 
         {/* Content - Lebih personal, tidak truncate */}
         <div className="prose prose-sm max-w-none">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap font-serif">
+          <p className=" leading-relaxed whitespace-pre-wrap font-serif">
             {note.content}
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
           {menuOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 bottom-7 z-20 w-44 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1">
+              <div className="absolute right-0 bottom-7 z-20 w-44 rounded-lg shadow-lg border border-variant bg-card py-1">
                 {/* Private notes can always be edited by owner */}
                 <button
                   onClick={(e) => {
@@ -128,7 +128,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
                     setMenuOpen(false);
                     onEdit ? onEdit() : null;
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2"
                 >
                   <Edit2 size={14} className="text-blue-600" />
                   <span>Edit</span>
@@ -140,7 +140,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
                     setMenuOpen(false);
                     onDelete ? onDelete() : null;
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600"
                 >
                   <Trash2 size={14} />
                   <span>Delete</span>
@@ -150,9 +150,6 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
           )}
         </div>
       </div>
-      {/* Modal handled by parent `ListNotes` via Portal when onDelete is used. */}
-
-      {/* AI counselor text removed per request; actions moved to header. */}
     </article>
   );
 }

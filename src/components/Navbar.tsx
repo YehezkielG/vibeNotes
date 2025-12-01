@@ -133,7 +133,6 @@ export default function Navbar() {
               />
               <h1 className="font-bold text-xl dark:text-white">vibeNotes</h1>
             </div>
-            <ThemeToggle />
             <ul className="text-lg font-medium flex flex-col w-full">
               {navItems.map((item) => {
                 const isActive =
@@ -163,7 +162,7 @@ export default function Navbar() {
                 );
               })}
             </ul>
-            <div className="mt-auto w-full">
+            <div className="mt-auto ml-1 w-full">
               {isLoading ? (
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="rounded-full w-7 h-7 bg-gray-200 animate-pulse shrink-0" />
@@ -175,8 +174,8 @@ export default function Navbar() {
                   className="flex items-center gap-3 min-w-0 shrink-0"
                 >
                   <div
-                    className={`rounded-full overflow-hidden w-7 h-7 ring-2 ${
-                      isOwnProfileView ? "ring-black" : "ring-gray-100"
+                    className={`rounded-full overflow-hidden w-7 h-7 
+                      ${ isOwnProfileView ? "ring-2 ring-gray-100" : ""
                     } shrink-0`}
                   >
                     <Image
@@ -206,6 +205,9 @@ export default function Navbar() {
                   <span>sign in</span>
                     </Link>
               )}
+            </div>
+            <div className="absolute bottom-10">
+            <ThemeToggle />
             </div>
           </div>
         </div>

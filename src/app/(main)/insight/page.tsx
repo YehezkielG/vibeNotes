@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Globe, Lock } from "lucide-react";
+import Link from "next/link";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { getLabelColor } from "../../../lib/utils/emotionMapping";
 import InsightSkeleton from "@/components/skeletons/InsightSkeleton";
@@ -117,6 +118,32 @@ export default function InsightPage() {
   // Prepare chart data for private emotions
   const privateChartData = buildTopChartData(userStats.privateEmotionDistribution);
 
+  /* Render pie labels using the slice color. Using any for Recharts props to avoid heavy typing. */
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  const pieLabelRenderer = (props: any) => {
+    // Use polar coordinates to place labels slightly outside the pie
+    const { cx, cy, midAngle, outerRadius, payload } = props;
+    const RAD = Math.PI / 180;
+    const offset = 18; // distance from outer radius to label
+    const radius = (outerRadius || 56) + offset;
+    const angle = -midAngle * RAD; // Recharts uses degrees, invert for SVG coordinate system
+    const x = cx + radius * Math.cos(angle);
+    const y = cy + radius * Math.sin(angle);
+    const label = `${payload.name} ${payload.value}%`;
+    const textAnchor = x > cx ? "start" : "end";
+    return (
+      <text x={x} y={y} fill={payload?.color || 'currentColor'} textAnchor={textAnchor} dominantBaseline="central" fontSize={12}>
+        {label}
+      </text>
+    );
+  };
+
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  const legendFormatter = (value: string, entry: any) => {
+    const color = entry?.payload?.color ?? getLabelColor((entry?.payload?.rawKey as string) || value.toLowerCase());
+    return <span style={{ color }}>{value}</span>;
+  };
+
   if (status === "loading" || loading) {
     return <InsightSkeleton />;
   }
@@ -127,10 +154,10 @@ export default function InsightPage() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <div className="container mx-auto px-4 pb-6 md:pb-10">
+      <div className="container mx-auto pb-6 md:pb-10">
         {/* Header Section */}
         <header className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">
+          <h1 className="text-xl font-bold mb-2 text-gray-900">
             Self Reflection
           </h1>
           <p className="text-gray-600 text-sm md:text-base">
@@ -138,8 +165,8 @@ export default function InsightPage() {
           </p>
         </header>
         {/* Top row: stats + top 3 public notes */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="bg-surface rounded-xl p-6 shadow-sm border border-variant">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 ">
+          <div className="bg-gray-500/20 rounded-xl p-6 shadow-sm border border-variant insight-card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Notes</h3>
             <div className="flex flex-col gap-4">
               <div className="bg-card rounded-lg p-4 border border-variant text-center w-full">
@@ -153,19 +180,23 @@ export default function InsightPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-surface rounded-xl p-6 shadow-sm border border-variant">
+          <div className="lg:col-span-2 bg-gray-500/20 rounded-xl p-6 shadow-sm border border-variant insight-card">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Top Public Notes</h3>
             {topNotes.length > 0 ? (
               <div className="space-y-4">
                 {topNotes.map((n) => (
-                  <div key={n._id || n.id} className="p-4 rounded-lg border border-variant bg-card">
+                  <Link
+                    key={n._id || n.id}
+                    href={`/note/${n._id || n.id}`}
+                    className="block p-4 rounded-lg border border-variant bg-card hover:shadow-sm transition-colors"
+                  >
                     <p className="text-sm text-gray-900 font-semibold mb-1">{n.title || (n.content || '').slice(0, 60) + (n.content && n.content.length > 60 ? '...' : '')}</p>
                     <p className="text-xs text-gray-600">{(n.content || '').slice(0, 120)}{(n.content && n.content.length > 120) ? '...' : ''}</p>
                     <div className="mt-2 text-xs text-gray-500 flex items-center gap-4">
                       <span>❤️ {n.likes || 0}</span>
                       <span>💬 {Array.isArray(n.responses) ? n.responses.length : 0}</span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -177,12 +208,12 @@ export default function InsightPage() {
         {/* Second row: Public Emotional Patterns + Private Emotional Patterns */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Public Emotional Patterns */}
-          <div className="bg-surface rounded-xl shadow-sm border border-variant py-2">
+          <div className="bg-gray-500/20 rounded-xl shadow-sm border border-variant py-2 insight-card">
             <h2 className="text-lg font-semibold justify-center flex items-center w-full gap-2 text-gray-900">
               <Globe className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
               Public Emotional Patterns
             </h2>
-            <div className="aspect-square w-full max-w-sm mx-auto rounded-lg flex items-center justify-center">
+            <div className="aspect-square bg-card w-full max-w-sm mx-auto m-2 p-2 flex items-center justify-center">
               {publicChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -191,7 +222,7 @@ export default function InsightPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, value }) => `${name} ${value}%`}
+                      label={pieLabelRenderer}
                       outerRadius={56}
                       fill="#8884d8"
                       dataKey="value"
@@ -206,13 +237,13 @@ export default function InsightPage() {
                         const p = payload[0];
                         return (
                           <div className="bg-card p-2 rounded border border-variant shadow text-sm">
-                            <div className="font-medium text-gray-800">{p.name}</div>
-                            <div className="text-gray-600">{p.value}%</div>
+                            <div className="font-medium text-foreground">{p.name}</div>
+                            <div className="text-muted">{p.value}%</div>
                           </div>
                         );
                       }}
                     />
-                    <Legend />
+                    <Legend formatter={legendFormatter} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -228,12 +259,12 @@ export default function InsightPage() {
           </div>
 
           {/* Private Emotional Patterns */}
-          <div className="bg-surface rounded-xl shadow-sm border border-variant py-2">
+          <div className="bg-gray-500/20 rounded-xl shadow-sm border border-variant py-2 insight-card">
             <h2 className="text-lg font-semibold flex justify-center items-center w-full gap-2 text-gray-900">
               <Lock className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
               Private Emotional Patterns
             </h2>
-            <div className="aspect-square w-full max-w-sm mx-auto rounded-lg flex items-center justify-center">
+            <div className="aspect-square bg-card w-full max-w-sm mx-auto m-2 p-2 flex items-center justify-center">
               {privateChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -242,7 +273,7 @@ export default function InsightPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, value }) => `${name} ${value}%`}
+                      label={pieLabelRenderer}
                       outerRadius={56}
                       fill="#8884d8"
                       dataKey="value"
@@ -257,13 +288,13 @@ export default function InsightPage() {
                         const p = payload[0];
                         return (
                           <div className="bg-card p-2 rounded border border-variant shadow text-sm">
-                            <div className="font-medium text-gray-800">{p.name}</div>
-                            <div className="text-gray-600">{p.value}%</div>
+                            <div className="font-medium text-foreground">{p.name}</div>
+                            <div className="text-muted">{p.value}%</div>
                           </div>
                         );
                       }}
                     />
-                    <Legend />
+                    <Legend formatter={legendFormatter} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -280,7 +311,7 @@ export default function InsightPage() {
         </div>
 
         {/* Third row: Weekly Whisper (Full Width) */}
-        <div className="bg-surface rounded-xl p-6 shadow-sm border border-variant">
+        <div className="bg-gray-500/20 rounded-xl p-6 shadow-sm border border-variant insight-card">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900">
             <Sparkles className="w-5 h-5 text-indigo-600" />
             <span>Weekly Whisper</span>
@@ -323,7 +354,7 @@ export default function InsightPage() {
 
         {/* Additional Info Section */}
         <div className="mt-6 bg-surface border border-variant rounded-xl p-4 text-center">
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-gray-500">
             💡 This reflection is generated based on your notes from the past 7 days
             using AI to provide meaningful perspectives.
           </p>

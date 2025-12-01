@@ -11,8 +11,6 @@ export async function GET(
 ) {
   try {
     // `context.params` may be a Promise in some Next.js versions/environments;
-    // await it to be safe at runtime. Use `any` for the context typing to
-    // avoid TypeScript RouteHandler signature mismatches.
     const { username, id } = await context.params;
     console.log(id);
     if (!username || typeof username !== "string") {

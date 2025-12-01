@@ -6,7 +6,6 @@ import Google from "next-auth/providers/google";
 import DiscordProvider from "next-auth/providers/discord";
 
 // Normalize auth-related environment URLs so `new URL()` in auth library
-// doesn't fail when deployment env vars (like VERCEL_URL) omit protocol.
 function ensureUrlProtocol(u?: string | undefined) {
   if (!u) return u;
   // If already has scheme (http:// or https:// etc.), return as-is

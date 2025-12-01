@@ -3,13 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dbConnect from '@/lib/mongoose';
 import Note from '@/models/Note';
 
-/**
- * Generates a weekly emotional insight summary for a user based on their recent notes.
- * Uses Gemini AI to analyze patterns and create a poetic reflection.
- * 
- * @param userId - The MongoDB user ID
- * @returns A short poetic summary in Indonesian (max 3 sentences)
- */
+/* Generates a weekly emotional insight summary for a user based on their recent notes. */
 export async function generateWeeklyInsight(userId: string): Promise<string> {
   try {
     // Connect to database

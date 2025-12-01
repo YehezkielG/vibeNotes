@@ -8,7 +8,6 @@ export function transformAvatar(url: string, size: number = 100) {
     if (!isCloudinary || !CLOUD_NAME) return url; // Only transform Cloudinary assets
 
     // Example original: https://res.cloudinary.com/<cloud>/image/upload/v123456/avatars/abc.png
-    // Insert transformation segment after 'upload/'
     return url.replace(/(image\/upload\/)(?!v)/, `$1c_fill,f_auto,q_auto,w_${size},h_${size}/`);
   } catch {
     return url;

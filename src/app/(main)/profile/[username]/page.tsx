@@ -163,7 +163,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleFollowToggle}
                       disabled={followPending}
-                      className="rounded-full px-4 py-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium  ${isFollowing ? 'bg-gray-300/30 text-gray-800' : 'bg-indigo-600 text-white'} disabled:opacity-50`}
                     >
                       {followPending ? "..." : isFollowing ? "Following" : "Follow"}
                     </button>
@@ -299,7 +299,7 @@ export default function ProfilePage() {
                     <label className="block text-sm text-gray-600">Username</label>
                     <input
                       value={editData.username}
-                              onChange={(e) => setEditData({ ...editData, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })}
+                      onChange={(e) => setEditData({ ...editData, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })}
                       className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
                       placeholder="username"
                       minLength={3}
@@ -361,7 +361,7 @@ export default function ProfilePage() {
         />
       </div>
       {user.bio && (
-        <p className="text-sm text-gray-300 whitespace-pre-wrap mt-5">{user.bio}</p>
+        <p className="text-sm text-gray-500 whitespace-pre-wrap mt-5">{user.bio}</p>
       )}
       <hr className="my-5"/>
       {/* Notes Section */}

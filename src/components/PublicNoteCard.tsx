@@ -59,7 +59,7 @@ export default function PublicNoteCard({
   const noteId = normalizeNoteId(note._id);
 
   return (
-    <article className="relative rounded-xl shadow-sm border border-gray-200 p-5 transition-all hover:shadow-md hover:border-gray-300">
+    <article className="relative border-gray-200 border rounded-xl shadow-md p-5 transition-all hover:shadow-md">
       {/* Header: Avatar + Author Info + Public Badge */}
       <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ export default function PublicNoteCard({
             <div className="w-12 h-12 rounded-full overflow-hidden ring-gray-100 shrink-0">
               <Image
                 src={transformAvatar(authorImage, 64)}
-                alt={authorUsername}
+                alt={authorUsername} 
                 width={48}
                 height={48}
                 className="object-cover w-full h-full"

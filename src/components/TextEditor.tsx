@@ -45,8 +45,6 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion?: (emoti
   const [includeCounselor, setIncludeCounselor] = useState(false);
 
   // Auto-scroll to counselor panel when advice arrives
-  // Previously auto-scrolled to counselor panel; counselor UI removed.
-  // (keep placeholder in case we reintroduce counselor UI later)
 
   // load draft from localStorage on mount
   useEffect(() => {
@@ -355,12 +353,12 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion?: (emoti
 
   const visibilityAccents = {
     private: {
-      button: "border-2 text-sky-100",
+      button: "border-2",
       icon: "text-sky-300",
       active: "border-sky-400 shadow-[0_0_0_1px_rgba(14,165,233,0.45)]",
     },
     public: {
-      button: "border-2 text-fuchsia-100",
+      button: "border-2",
       icon: "text-fuchsia-300",
       active: "border-fuchsia-400 shadow-[0_0_0_1px_rgba(217,70,239,0.45)]",
     },
