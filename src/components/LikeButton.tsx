@@ -63,7 +63,7 @@ export default function LikeButton({ noteId, likes, likedBy = [], className }: L
       onClick={toggleLike}
       disabled={pending}
       className={`inline-flex items-center gap-1 transition-colors ${
-        isLiked ? "text-pink-600" : "text-gray-500 hover:text-gray-700"
+        isLiked ? "text-pink-600" : "dark:text-gray-100 text-gray-900"
       } ${className ?? ""}`}
     >
       <Heart size={16} className={isLiked ? "fill-current" : ""} />

@@ -141,7 +141,7 @@ export default function ProfilePage() {
     <div className="container mx-auto">
       <div className="space-y-6">
         {/* Profile Header */}
-        <div className="bg-white rounded-xl ">
+        <div className=" rounded-xl ">
           <div className="flex items-start gap-4">
             <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shrink-0`}>
               <Image
@@ -361,7 +361,7 @@ export default function ProfilePage() {
         />
       </div>
       {user.bio && (
-        <p className="text-sm text-gray-700 whitespace-pre-wrap mt-5">{user.bio}</p>
+        <p className="text-sm text-gray-300 whitespace-pre-wrap mt-5">{user.bio}</p>
       )}
       <hr className="my-5"/>
       {/* Notes Section */}

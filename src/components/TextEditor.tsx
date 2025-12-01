@@ -459,7 +459,6 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion?: (emoti
               block w-full bg-transparent
               px-0 py-2
               text-base font-semibold text-black
-              placeholder:text-black/60
               border-none outline-none
             "
             placeholder="Note title"
@@ -476,7 +475,7 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion?: (emoti
                 type="button"
                 onClick={requestTitleSuggestion}
                 disabled={suggestingTitle || !content.trim()}
-                className="inline-flex items-center gap-1 rounded-md border border-black/60 text-xs font-medium text-black hover:bg-black/5 disabled:opacity-50 p-1 cursor-pointer"
+                className="inline-flex items-center gap-1 rounded-md  text-xs font-medium hover:bg-black/5 disabled:opacity-50 p-1 cursor-pointer"
                 aria-label="Suggest a title"
               >
                 {suggestingTitle ? (

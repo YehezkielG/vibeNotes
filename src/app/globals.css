@@ -7,17 +7,84 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@variant dark (.dark &);
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --muted: #f7f7f7;
+  --border: #e5e7eb;
+  --scrollbar-size: 12px;
+  --scrollbar-track: rgba(0,0,0,0.06);
+  --scrollbar-thumb: rgba(0,0,0,0.22);
+  --scrollbar-thumb-hover: rgba(0,0,0,0.34);
+  color-scheme: light;
+}
+
+.dark {
+  --background: #141414;
+  --foreground: #ededed;
+  --card: #1f1f1f;
+  --muted: #1a1a1a;
+  --border: rgba(255,255,255,0.06);
+  --scrollbar-track: rgba(255,255,255,0.06);
+  --scrollbar-thumb: rgba(255,255,255,0.22);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.34);
+  color-scheme: dark;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
 }
 
-:root{
-  --scrollbar-size: 12px;
-  --scrollbar-track: rgba(0,0,0,0.06);
-  --scrollbar-thumb: rgba(0,0,0,0.22);
-  --scrollbar-thumb-hover: rgba(0,0,0,0.34);
+/* Surface / card helpers using CSS variables so components can remain using
+  utility classes while still getting consistent colors in dark mode. */
+.bg-surface { background-color: var(--background) !important; }
+.bg-card { background-color: var(--card) !important; }
+.muted-bg { background-color: var(--muted) !important; }
+.border-variant { border-color: var(--border) !important; }
+
+/* Dark mode overrides for common Tailwind light-only utilities. This
+  helps quickly neutralize leftover `bg-white` classes without editing
+  every file. */
+.dark .bg-white { background-color: var(--card) !important; color: var(--foreground) !important; }
+.dark .bg-white\/70 { background-color: rgba(255,255,255,0.07) !important; }
+.dark .bg-white\/80 { background-color: rgba(255,255,255,0.06) !important; }
+.dark .border-gray-200 { border-color: var(--border) !important; }
+
+/* Text color overrides in dark mode for common utility classes so content
+   remains readable even when components still use light-mode classes. */
+.dark .text-gray-800,
+.dark .text-gray-900,
+.dark .text-black {
+  color: var(--foreground) !important;
 }
+.dark .text-gray-600 {
+  color: rgba(255,255,255,0.78) !important;
+}
+.dark .text-gray-400 {
+  color: rgba(255,255,255,0.6) !important;
+}
+.dark .text-gray-100 {
+  color: rgba(255,255,255,0.96) !important;
+}
+
+/* Skeleton / pulse adjustments: map pale/light skeleton backgrounds to muted
+   dark surfaces so loading states don't appear too bright on dark backgrounds. */
+.dark .animate-pulse .bg-white,
+.dark .animate-pulse .bg-white\/80,
+.dark .animate-pulse .bg-white\/70,
+.dark .animate-pulse .bg-gray-200,
+.dark .animate-pulse .bg-gray-100 {
+  background-color: var(--muted) !important;
+}
+.dark .rounded-xl.shadow-sm,
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6) !important;
+}
+
 
 /* Firefox */
 * {

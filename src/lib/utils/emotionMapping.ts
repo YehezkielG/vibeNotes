@@ -72,7 +72,6 @@ export const getEmojiForLabel = (label: string): string => {
 
 export const getLabelColor = (label: string): string => {
   // Colors tuned to the "vibe" of each GoEmotion label.
-  // These provide visually distinct hues for charts and badges.
   const colorMap: Record<string, string> = {
     admiration: "#7C4DFF", // violet - awe / wonder
     amusement: "#FFB86B", // warm orange - playful

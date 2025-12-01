@@ -59,12 +59,12 @@ export default function PublicNoteCard({
   const noteId = normalizeNoteId(note._id);
 
   return (
-    <article className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-5 transition-all hover:shadow-md hover:border-gray-300">
+    <article className="relative rounded-xl shadow-sm border border-gray-200 p-5 transition-all hover:shadow-md hover:border-gray-300">
       {/* Header: Avatar + Author Info + Public Badge */}
       <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
           <Link href={`/profile/${authorUsername}`} className="shrink-0">
-            <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-gray-100 shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden ring-gray-100 shrink-0">
               <Image
                 src={transformAvatar(authorImage, 64)}
                 alt={authorUsername}
@@ -74,10 +74,10 @@ export default function PublicNoteCard({
               />
             </div>
           </Link>
-          <div className="flex flex-col">
+          <div className="flex flex-col dark:text-gray-100 text-gray-900">
             <Link
               href={`/profile/${authorUsername}`}
-              className="font-semibold text-gray-900 hover:text-indigo-600 transition-colors"
+              className="font-semibold hover:text-indigo-600 transition-colors"
             >
               {authorDisplay}
             </Link>
@@ -115,12 +115,12 @@ export default function PublicNoteCard({
 
       {/* Title */}
       <Link href={`/note/${noteId}`} className="block group">
-        <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
+        <h3 className="font-bold text-lg dark:text-gray-100 text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
           {note.title || "(Untitled note)"}
         </h3>
 
         {/* Content Preview */}
-        <p className="text-gray-700 whitespace-pre-wrap mb-3 leading-relaxed">
+        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-3 leading-relaxed">
           {note.content}
         </p>
       </Link>
@@ -192,14 +192,14 @@ export default function PublicNoteCard({
           likes={note.likes ?? 0}
           likedBy={likedBy}
         />
-  <Link href={`/note/${noteId}#responses`} className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors group">
+  <Link href={`/note/${noteId}#responses`} className="inline-flex items-center gap-2  hover:text-indigo-600 transition-colors group">
           <MessageCircle
             size={18}
             className="group-hover:scale-110 transition-transform"
           />
           <span className="text-sm font-medium">{note.responses?.length || 0}</span>
         </Link>
-        <button className="inline-flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors group">
+        <button className="inline-flex items-center gap-2  hover:text-indigo-600 transition-colors group">
           <Share2
             size={18}
             className="group-hover:scale-110 transition-transform"

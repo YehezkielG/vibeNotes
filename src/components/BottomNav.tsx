@@ -34,7 +34,7 @@ export default function BottomNav() {
   const avatar = transformAvatar((localUser as any)?.image || session?.user?.image || "/default-profile.png", 64);
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 lg:hidden">
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 lg:hidden">
       <div className="mx-auto max-w-screen-sm">
         <ul className="flex items-center justify-between px-6 py-2">
           {items.map(({ href, label, icon: Icon }) => (
@@ -43,7 +43,7 @@ export default function BottomNav() {
                 href={href}
                 aria-label={label}
                 className={`flex flex-col items-center gap-1 ${
-                  isActive(href) ? "text-black" : "text-gray-600"
+                  isActive(href) ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400"
                 }`}
               >
                 <Icon size={22} />
@@ -60,8 +60,8 @@ export default function BottomNav() {
                 aria-label="Profil"
                 className={`w-6 h-6 block rounded-full shrink-0 overflow-hidden ring-2 ${
                   pathname?.startsWith(`/profile/${session.user.username}`)
-                    ? "ring-black"
-                    : "ring-gray-100"
+                    ? "ring-black dark:ring-white"
+                    : "ring-gray-100 dark:ring-gray-800"
                 }`}
               >
                 <Image
@@ -73,7 +73,7 @@ export default function BottomNav() {
                 />
               </Link>
             ) : (
-              <Link href="/auth" className="inline-flex items-center gap-2 text-gray-700 text-sm">
+              <Link href="/auth" className="inline-flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm">
                 <LogIn size={16} />
                 <span>sign in</span>
               </Link>

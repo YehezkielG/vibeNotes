@@ -6,8 +6,8 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import useSWR from "swr";
-import SearchBar from "./SearchBar";
 import { transformAvatar } from "@/lib/utils/image";
+import ThemeToggle from "./ThemeToggle";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -97,27 +97,25 @@ export default function Navbar() {
   const fallbackUsername = resolvedUsername || session?.user?.username || "";
 
   // Mobile menu open 
-
-  const handleSearch = (q: string) => {
-    // placeholder: integrate search navigation as needed
-  };
-
   return (
     <nav className="w-full">
       {/* Mobile top bar (visible below lg). Show app name only on Home. */}
-      <div className="lg:hidden sticky top-0 z-50 bg-white">
+      <div className="lg:hidden sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800">
         {pathname === "/" && (
           <div className="flex items-center justify-between py-3 px-3">
             <Link href="/" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Logo" width={28} height={28} />
-              <span className="font-bold text-lg">vibeNotes</span>
+              <span className="font-bold text-lg dark:text-white">vibeNotes</span>
             </Link>
-            <Link href="/notifications" aria-label="Notifications" className="relative text-gray-600 hover:text-gray-900">
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 right-0 h-2.5 w-2.5 rounded-full bg-red-500" />
-              )}
-            </Link>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Link href="/notifications" aria-label="Notifications" className="relative text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 right-0 h-2.5 w-2.5 rounded-full bg-red-500" />
+                )}
+              </Link>
+            </div>
           </div>
         )}
       </div>
@@ -133,8 +131,9 @@ export default function Navbar() {
                 width={25}
                 height={25}
               />
-              <h1 className="font-bold text-xl">vibeNotes</h1>
+              <h1 className="font-bold text-xl dark:text-white">vibeNotes</h1>
             </div>
+            <ThemeToggle />
             <ul className="text-lg font-medium flex flex-col w-full">
               {navItems.map((item) => {
                 const isActive =
@@ -148,8 +147,8 @@ export default function Navbar() {
                       href={item.href}
                       className={`flex items-center gap-2 w-full ${
                         isActive
-                          ? "text-black font-semibold"
-                          : "text-gray-600 hover:text-gray-900"
+                          ? "text-black font-semibold dark:text-white"
+                          : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
                       }`}
                     >
                       <span className="relative inline-flex">
@@ -191,8 +190,8 @@ export default function Navbar() {
                   <span
                     className={`block truncate max-w-40 ${
                       isOwnProfileView
-                        ? "text-black font-semibold"
-                        : "text-gray-600 hover:text-black"
+                        ? "text-black font-semibold dark:text-white"
+                        : "text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-gray-100"
                     }`}
                     title={fallbackUsername}
                   >
@@ -201,7 +200,7 @@ export default function Navbar() {
                 </Link>
               ) : (
                     <Link
-                      href="/auth" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 w-full"
+                      href="/auth" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 w-full"
                     >
                       <LogIn size={18} />
                   <span>sign in</span>

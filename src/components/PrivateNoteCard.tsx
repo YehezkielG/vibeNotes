@@ -3,7 +3,7 @@
 import { Lock, Calendar, MessageCircle, Dot, Trash2, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { getEmojiForLabel, extractDominantEmotion } from "@/lib/utils/emotionMapping";
+import { getEmojiForLabel, extractDominantEmotion, getLabelColor } from "@/lib/utils/emotionMapping";
 import { normalizeNoteId } from "@/lib/utils/notesLib";
 
 interface PrivateNoteCardProps {
@@ -42,7 +42,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
   }
 
   return (
-    <article className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all hover:shadow-md">
+    <article className="relative rounded-2xl p-6 shadow-sm border border-gray-100 transition-all hover:shadow-md">
       {/* Header dengan Lock Icon */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2 text-gray-500">
@@ -55,10 +55,9 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
           {dominant && (
             <div 
               className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs border"
-              style={{ 
-                backgroundColor: `#fafafa`,
-                borderColor: `#ececec`,
-                color: `#6b7280`
+              style={{ backgroundColor: getLabelColor(dominant.label) + "33",
+                borderColor: getLabelColor(dominant.label),
+                color: getLabelColor(dominant.label)
               }}
             >
               <span className="text-sm">{moodEmoji}</span>
@@ -121,7 +120,7 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
           {menuOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 bottom-7 z-20 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+              <div className="absolute right-0 bottom-7 z-20 w-44 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1">
                 {/* Private notes can always be edited by owner */}
                 <button
                   onClick={(e) => {

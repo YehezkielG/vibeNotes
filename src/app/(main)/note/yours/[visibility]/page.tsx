@@ -55,10 +55,10 @@ export default function YourNotesPage() {
   if (loading) {
     return (
       <div className="space-y-5">
-        <div className="rounded-xl bg-white/80 backdrop-blur animate-pulse">
+        <div className="rounded-xl  backdrop-blur animate-pulse">
           <div className="flex items-center justify-between mb-5">
-            <div className="h-5 w-32 rounded bg-gray-200" />
-            <div className="h-4 w-20 rounded bg-gray-200" />
+            <div className="h-5 w-32 rounded" />
+            <div className="h-4 w-20 rounded" />
           </div>
           <NoteCardSkeleton count={4} />
         </div>
@@ -76,7 +76,7 @@ export default function YourNotesPage() {
         </p>
       ) : (
         <div className="space-y-5">
-          <div className="rounded-xl bg-white/60 backdrop-blur space-y-5">
+          <div className="rounded-xl backdrop-blur space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold">Your Notes</h3>
               <span className="text-xs text-gray-500">

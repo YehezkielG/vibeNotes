@@ -139,26 +139,26 @@ export default function InsightPage() {
         </header>
         {/* Top row: stats + top 3 public notes */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="bg-surface rounded-xl p-6 shadow-sm border border-variant">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Notes</h3>
             <div className="flex flex-col gap-4">
-              <div className="bg-white rounded-lg p-4 border border-gray-200 text-center w-full">
+              <div className="bg-card rounded-lg p-4 border border-variant text-center w-full">
                 <p className="text-sm text-gray-500">Public (7 days)</p>
                 <p className="text-2xl font-bold text-indigo-600 mt-2">{userStats.publicCount}</p>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-gray-200 text-center w-full">
+              <div className="bg-card rounded-lg p-4 border border-variant text-center w-full">
                 <p className="text-sm text-gray-500">Private (7 days)</p>
                 <p className="text-2xl font-bold text-indigo-600 mt-2">{userStats.privateCount}</p>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="lg:col-span-2 bg-surface rounded-xl p-6 shadow-sm border border-variant">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Top Public Notes</h3>
             {topNotes.length > 0 ? (
               <div className="space-y-4">
                 {topNotes.map((n) => (
-                  <div key={n._id || n.id} className="p-4 rounded-lg border border-gray-200 bg-white">
+                  <div key={n._id || n.id} className="p-4 rounded-lg border border-variant bg-card">
                     <p className="text-sm text-gray-900 font-semibold mb-1">{n.title || (n.content || '').slice(0, 60) + (n.content && n.content.length > 60 ? '...' : '')}</p>
                     <p className="text-xs text-gray-600">{(n.content || '').slice(0, 120)}{(n.content && n.content.length > 120) ? '...' : ''}</p>
                     <div className="mt-2 text-xs text-gray-500 flex items-center gap-4">
@@ -177,12 +177,12 @@ export default function InsightPage() {
         {/* Second row: Public Emotional Patterns + Private Emotional Patterns */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Public Emotional Patterns */}
-          <div className="bg-gray-50 rounded-xl shadow-sm border border-gray-200 py-2">
+          <div className="bg-surface rounded-xl shadow-sm border border-variant py-2">
             <h2 className="text-lg font-semibold justify-center flex items-center w-full gap-2 text-gray-900">
               <Globe className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
               Public Emotional Patterns
             </h2>
-            <div className="aspect-square w-full max-w-md mx-auto rounded-lg flex items-center justify-center">
+            <div className="aspect-square w-full max-w-sm mx-auto rounded-lg flex items-center justify-center">
               {publicChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -192,7 +192,7 @@ export default function InsightPage() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, value }) => `${name} ${value}%`}
-                      outerRadius={80}
+                      outerRadius={56}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -205,7 +205,7 @@ export default function InsightPage() {
                         if (!active || !payload || !payload.length) return null;
                         const p = payload[0];
                         return (
-                          <div className="bg-white p-2 rounded border shadow text-sm">
+                          <div className="bg-card p-2 rounded border border-variant shadow text-sm">
                             <div className="font-medium text-gray-800">{p.name}</div>
                             <div className="text-gray-600">{p.value}%</div>
                           </div>
@@ -216,7 +216,7 @@ export default function InsightPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="bg-white rounded-lg p-6 border border-gray-200 w-full h-full flex items-center justify-center">
+                <div className="bg-card rounded-lg p-6 border border-variant w-full h-full flex items-center justify-center">
                   <p className="text-gray-500 text-sm text-center">
                     No public emotional data yet.
                     <br />
@@ -228,12 +228,12 @@ export default function InsightPage() {
           </div>
 
           {/* Private Emotional Patterns */}
-          <div className="bg-gray-50 rounded-xl shadow-sm border border-gray-200 py-2">
+          <div className="bg-surface rounded-xl shadow-sm border border-variant py-2">
             <h2 className="text-lg font-semibold flex justify-center items-center w-full gap-2 text-gray-900">
               <Lock className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
               Private Emotional Patterns
             </h2>
-            <div className="aspect-square w-full max-w-md mx-auto rounded-lg flex items-center justify-center">
+            <div className="aspect-square w-full max-w-sm mx-auto rounded-lg flex items-center justify-center">
               {privateChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -243,7 +243,7 @@ export default function InsightPage() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, value }) => `${name} ${value}%`}
-                      outerRadius={80}
+                      outerRadius={56}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -256,7 +256,7 @@ export default function InsightPage() {
                         if (!active || !payload || !payload.length) return null;
                         const p = payload[0];
                         return (
-                          <div className="bg-white p-2 rounded border shadow text-sm">
+                          <div className="bg-card p-2 rounded border border-variant shadow text-sm">
                             <div className="font-medium text-gray-800">{p.name}</div>
                             <div className="text-gray-600">{p.value}%</div>
                           </div>
@@ -267,7 +267,7 @@ export default function InsightPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="bg-white rounded-lg p-6 border border-gray-200 w-full h-full flex items-center justify-center">
+                <div className="bg-card rounded-lg p-6 border border-variant w-full h-full flex items-center justify-center">
                   <p className="text-gray-500 text-sm text-center">
                     No private emotional data yet.
                     <br />
@@ -280,14 +280,14 @@ export default function InsightPage() {
         </div>
 
         {/* Third row: Weekly Whisper (Full Width) */}
-        <div className="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200">
+        <div className="bg-surface rounded-xl p-6 shadow-sm border border-variant">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900">
             <Sparkles className="w-5 h-5 text-indigo-600" />
             <span>Weekly Whisper</span>
           </h2>
 
           {weeklyWhisper ? (
-            <blockquote className="relative bg-white rounded-lg p-6 border border-gray-200">
+            <blockquote className="relative bg-card rounded-lg p-6 border border-variant">
               <div className="absolute -top-3 -left-2 text-5xl text-indigo-300/40 font-serif">
                 &ldquo;
               </div>
@@ -298,8 +298,8 @@ export default function InsightPage() {
                 &rdquo;
               </div>
             </blockquote>
-          ) : (
-            <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+            ) : (
+            <div className="bg-card rounded-lg p-6 border border-variant text-center">
               <p className="text-gray-600 text-sm">
                 No weekly reflection available yet
               </p>
@@ -322,7 +322,7 @@ export default function InsightPage() {
         </div>
 
         {/* Additional Info Section */}
-        <div className="mt-6 bg-white/5 border border-white/6 rounded-xl p-4 text-center">
+        <div className="mt-6 bg-surface border border-variant rounded-xl p-4 text-center">
           <p className="text-sm text-gray-300">
             💡 This reflection is generated based on your notes from the past 7 days
             using AI to provide meaningful perspectives.

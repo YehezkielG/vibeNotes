@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
-import Navbar from "../../components/Navbar";
+import Navbar from "@/components/Navbar";
 import RightSidebar from "@/components/RightSidebar";
 import { Inter } from "next/font/google";
 import AuthSessionProvider from "@/components/providers/AuthSessionProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import Footer from "@/components/Footer"
 import BottomNav from "@/components/BottomNav"
 
@@ -24,11 +25,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} antialiased  px-2 mainBody bg-white text-gray-800`}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme') || 
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+                document.documentElement.style.colorScheme = theme;
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} antialiased px-2 mainBody bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100`}>
         <AuthSessionProvider>
-          {/* Responsive shell: stack on mobile, three-column on lg */}
-          <div className="relative flex flex-col lg:flex-row lg:justify-between lg:gap-6 mx-auto w-full max-w-screen-2xl lg:px-10 px-1 pb-14 lg:pb-0">
+          <ThemeProvider>
+            {/* Responsive shell: stack on mobile, three-column on lg */}
+            <div className="relative flex flex-col lg:flex-row lg:justify-between lg:gap-6 mx-auto w-full max-w-screen-2xl lg:px-10 px-1 pb-14 lg:pb-0">
             {/* Left nav: shows above main on mobile, sticky on desktop */}
             <aside className="w-full lg:sticky lg:top-0 lg:h-svh lg:w-2/12 overflow-y-auto pb-4">
               <Navbar />
@@ -49,6 +66,7 @@ export default function RootLayout({
             {/* Mobile bottom navigation */}
             <BottomNav />
           </div>
+          </ThemeProvider>
         </AuthSessionProvider>
       </body>
     </html>
