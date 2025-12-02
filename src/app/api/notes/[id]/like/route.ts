@@ -1,3 +1,4 @@
+import "server-only";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { auth } from "@/auth";
@@ -19,6 +20,9 @@ export async function POST(
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
+    }
+    if (session.user.isBanned) {
+      return NextResponse.json({ message: "Account is banned." }, { status: 403 });
     }
     const { id } = await context.params;
     const noteId = id;

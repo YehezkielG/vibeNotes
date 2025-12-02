@@ -1,3 +1,4 @@
+import "server-only";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
@@ -15,6 +16,10 @@ export async function POST(request: Request) {
 
     if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ err: "Not authenticated." }, { status: 401 });
+    }
+
+    if (session.user.isBanned) {
+      return NextResponse.json({ err: "Account is banned." }, { status: 403 });
     }
 
     const userId = session.user.id;

@@ -1,3 +1,4 @@
+import "server-only";
 import { InferenceClient } from "@huggingface/inference";
 import { NextResponse } from "next/server";
 

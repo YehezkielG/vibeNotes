@@ -1,3 +1,4 @@
+import "server-only";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import Note from "@/models/Note";
@@ -32,6 +33,12 @@ export async function GET(request: Request) {
         return NextResponse.json(
           { message: "Not authenticated." },
           { status: 401 },
+        );
+      }
+      if (session.user.isBanned) {
+        return NextResponse.json(
+          { message: "Account is banned." },
+          { status: 403 },
         );
       }
 

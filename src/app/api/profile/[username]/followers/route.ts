@@ -1,3 +1,4 @@
+import "server-only";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import User, { IUser } from "@/models/User";

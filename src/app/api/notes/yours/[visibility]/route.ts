@@ -14,6 +14,9 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
     }
+    if (session.user.isBanned) {
+      return NextResponse.json({ message: "Account is banned." }, { status: 403 });
+    }
 
     const validVisibilities = ["public", "private"];
     if (!(validVisibilities.includes(visibility))) {

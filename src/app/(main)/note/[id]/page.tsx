@@ -1,6 +1,9 @@
+import "server-only";
 import { notFound } from "next/navigation";
 // relaxed id handling
-import {  Lock } from "lucide-react";
+import { Lock, Globe, MessageCircle, Share2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import dbConnect from "@/lib/mongoose";
 import Note from "@/models/Note";
 import { auth } from "@/auth";
@@ -8,7 +11,8 @@ import User from "@/models/User";
 import ResponseClient from "./Response";
 import { getEmojiForLabel, getLabelColor } from "@/lib/utils/emotionMapping";
 import { formatCreatedAt } from "@/lib/utils/notesLib";
-import PublicNoteCard from "@/components/PublicNoteCard";
+import { transformAvatar } from "@/lib/utils/image";
+import LikeButton from "@/components/LikeButton";
 
 export default async function NoteDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params;
@@ -125,6 +129,10 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const authorObj = note.author as any | undefined;
 
+  const authorImage = authorObj?.image || "/default-profile.png";
+  const authorUsername = authorObj?.username || "unknown";
+  const authorDisplay = authorObj?.displayName || authorUsername || "Unknown Author";
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const likedBy = Array.isArray(note.likedBy) ? note.likedBy.map((v: any) => String(v)) : [];
   const likes = note.likes ?? 0;
@@ -144,12 +152,12 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
     createdAt: note.createdAt ? new Date(note.createdAt).toISOString() : "",
     author: authorObj
       ? {
-          _id: String(authorObj._1d ?? ""),
+          _id: String(authorObj._id ?? ""),
           username: authorObj.username ?? "",
           displayName: authorObj.displayName ?? authorObj.username ?? "",
           image: authorObj.image ?? "/default-profile.png",
         }
-      : "",
+      : null,
     likes,
     likedBy,
     isPublic: Boolean(note.isPublic),
@@ -175,7 +183,74 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
     <>
       {note.isPublic ? (
         <>
-            <PublicNoteCard note={clientNote} showMenu={true} hideDominant={true} isOwner={isOwner} />
+            <article className="relative border-gray-200 border rounded-xl shadow-md p-5 transition-all hover:shadow-md">
+      {/* Header: Avatar + Author Info + Public Badge */}
+      <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+          <div className="shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden ring-gray-100 shrink-0">
+              <Image
+                src={transformAvatar(authorImage, 64)}
+                alt={authorUsername} 
+                width={48}
+                height={48}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col dark:text-gray-100 text-gray-900">
+            <Link
+              href={`/profile/${authorUsername}`}
+              className="font-semibold hover:text-indigo-600 transition-colors"
+            >
+              {authorDisplay}
+            </Link>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>@{authorUsername}</span>
+              <span>•</span>
+              <span>{formatCreatedAt(note.createdAt)}</span>
+              <Globe size={14} className="text-gray-400 float-right" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Title */}
+      <div className="block group">
+        <h3 className="font-bold text-lg dark:text-gray-100 text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
+          {note.title || "(Untitled note)"}
+        </h3>
+
+        {/* Content Preview */}
+        <p className="text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-3 leading-relaxed">
+          {note.content}
+        </p>
+      </div>
+
+      
+      {/* Action Buttons: Like, Comment, Share */}
+      <div className="flex items-center gap-6 pt-3 border-t border-gray-100">
+        <LikeButton
+          noteId={String(note._id)}
+          likes={note.likes ?? 0}
+          likedBy={likedBy}
+        />
+  <div className="inline-flex items-center gap-2  hover:text-indigo-600 transition-colors group">
+          <MessageCircle
+            size={18}
+            className="group-hover:scale-110 transition-transform"
+          />
+          <span className="text-sm font-medium">{note.responses?.length || 0}</span>
+        </div>
+        <button className="inline-flex items-center gap-2  hover:text-indigo-600 transition-colors group">
+          <Share2
+            size={18}
+            className="group-hover:scale-110 transition-transform"
+          />
+          <span className="text-sm font-medium">Share</span>
+        </button>
+      </div>
+    </article>
 
           <div className="mt-5 flex flex-wrap gap-3 sm:gap-4">
               {Array.isArray(note.emotion) && note.emotion.length > 0 ? (
@@ -184,7 +259,7 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
                   return (
                     <div 
                       key={item.label} 
-                      className="inline-block group py-2 px-3 rounded-2xl"
+                      className="inline-block group  py-1 px-2 rounded-2xl"
                       style={{ backgroundColor: bgColor + "20",color:bgColor ,border: `1px solid ${bgColor}33` }}
                     >
                       <div className="flex justify-between items-center text-xs sm:text-sm mb-1 ">
@@ -231,9 +306,9 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
                     <span>Private Note</span>
                   </div>
                 </div>
-                <h2 className="mt-2 text-2xl font-bold font-serif text-gray-900">{note.title?.trim() || "Untitled"}</h2>
+                <h2 className="mt-2 text-lg font-bold font-serif text-gray-900">{note.title?.trim() || "Untitled"}</h2>
                 <div className="mt-3 prose max-w-none text-gray-800 leading-7 font-serif">
-                  <p className="whitespace-pre-wrap">{note.content}</p>
+                  <p className="text-base whitespace-pre-wrap">{note.content}</p>
                 </div>
 
                 {/* Emotion distribution */}
@@ -242,7 +317,7 @@ export default async function NoteDetailPage({ params }: { params: { id: string 
                     note.emotion.map((item: { label: string; score: number }) => {
                       const bgColor = getLabelColor(item.label) ?? "#f3f4f6";
                       return (
-                        <div key={item.label} className="group py-2 px-3 rounded-2xl" style={{ backgroundColor: bgColor + "20", border: `1px solid ${bgColor}33` }}>
+                        <div key={item.label} className="group py-1 px-2 rounded-2xl" style={{ backgroundColor: bgColor + "20", border: `1px solid ${bgColor}33` }}>
                           <div className="flex justify-between items-center text-sm mb-1">
                             <span className="flex items-center mr-2 gap-2 font-medium capitalize" style={{ color: bgColor }}>
                               <span>{getEmojiForLabel(item.label)}</span> {item.label}

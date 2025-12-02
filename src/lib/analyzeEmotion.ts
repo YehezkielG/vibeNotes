@@ -1,3 +1,4 @@
+import "server-only";
 import { franc } from "franc-min";
 import { getHfClient } from "@/lib/hf-client";
 

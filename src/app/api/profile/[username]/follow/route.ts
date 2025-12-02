@@ -1,3 +1,4 @@
+import "server-only";
 import { auth } from "@/auth";
 import dbConnect from "@/lib/mongoose";
 import User, { IUser } from "@/models/User";
@@ -36,6 +37,9 @@ export async function POST(
   const { username } = await context.params;
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
+  }
+  if (session.user.isBanned) {
+    return NextResponse.json({ message: "Account is banned." }, { status: 403 });
   }
 
   await dbConnect();

@@ -1,3 +1,4 @@
+import "server-only";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
@@ -70,6 +71,9 @@ export async function POST(
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.isBanned) {
+      return NextResponse.json({ error: "Account is banned" }, { status: 403 });
     }
 
     const { id } = await context.params;

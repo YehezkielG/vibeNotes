@@ -1,3 +1,4 @@
+import "server-only";
 import { Types } from 'mongoose';
 import Notification, { NotificationType } from '@/models/Notification';
 import User from '@/models/User';

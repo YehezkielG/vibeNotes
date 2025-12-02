@@ -1,3 +1,4 @@
+import "server-only";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
@@ -9,6 +10,9 @@ export async function PATCH(request: Request) {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.isBanned) {
+      return NextResponse.json({ message: "Account is banned." }, { status: 403 });
     }
 
     const body = await request.json().catch(() => ({}));

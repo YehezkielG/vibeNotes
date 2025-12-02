@@ -1,5 +1,5 @@
 "use client";
-import { Compass, NotebookText, Bell, ChartLine, PlusCircle, LogIn } from "lucide-react";
+import { Compass, NotebookText, Bell, ChartLine, PlusCircle, LogIn, Shield } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { transformAvatar } from "@/lib/utils/image";
 import ThemeToggle from "./ThemeToggle";
+import { isAdmin } from "@/lib/admin";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -56,6 +57,9 @@ export default function Navbar() {
     pathname &&
     pathname.startsWith(`/profile/${session.user.username}`)
   );
+  
+  const userIsAdmin = session?.user?.email ? isAdmin(session.user.email) : false;
+  
   // Restore compact icon styling (smaller, muted)
   const navItems = [
     {
@@ -83,6 +87,11 @@ export default function Navbar() {
       icon: <ChartLine className="inline mr-3 text-gray-400" size={25} />,
       label: "Insight",
     },
+    ...(userIsAdmin ? [{
+      href: "/admin",
+      icon: <Shield className="inline mr-3 text-gray-400" size={25} />,
+      label: "Admin",
+    }] : []),
   ];
 
   // removed dropdown logic; logout will be handled on the profile page

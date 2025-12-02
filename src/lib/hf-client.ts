@@ -1,3 +1,4 @@
+import "server-only";
 import { HfInference } from "@huggingface/inference";
 
 let hfSingleton: HfInference | null = null;

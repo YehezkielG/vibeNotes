@@ -1,3 +1,4 @@
+import "server-only";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
@@ -85,6 +86,9 @@ export async function PATCH(
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+    if (session.user.isBanned) {
+      return NextResponse.json({ message: "Account is banned" }, { status: 403 });
+    }
 
     const { id } = await context.params;
     const body = await request.json();
@@ -170,6 +174,9 @@ export async function DELETE(
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.isBanned) {
+      return NextResponse.json({ message: "Account is banned" }, { status: 403 });
     }
 
     const { id } = await context.params;

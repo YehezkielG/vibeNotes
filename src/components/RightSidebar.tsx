@@ -43,14 +43,14 @@ export default function RightSidebar() {
     };
   }, []);
 
-    return <header className="flex items-center my-5">
+    return <header className="flex items-center my-5 px-2 sm:px-0">
 
       {/* Follow suggestions */}
       {loadingSuggestions ? (
         <SuggestionsSkeleton />
       ) : suggestions && (
         <aside className="">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Suggested for you</h4>
+          <h4 className="text-sm font-semibold text-gray-500 mb-3">Suggested for you</h4>
           {/* Desktop/large: vertical list */}
           <div className="hidden lg:block">
             <div className="space-y-3">
@@ -90,7 +90,7 @@ export default function RightSidebar() {
           </div>
 
           {/* Mobile: card grid */}
-          <div className={`block lg:hidden w-[360px] `}>
+          <div className={`block lg:hidden w-[360px]`}>
             <div className="flex items-center gap-3 overflow-x-auto overflow-y-hidden">
               {[...suggestions.recent, ...suggestions.newest]
                 .reduce((acc: Suggestion[], cur) => {

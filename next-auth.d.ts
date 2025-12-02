@@ -8,6 +8,8 @@ declare module "next-auth" {
       bio?: string | null;
       username?: string | null;
       isOnboarded?: boolean;
+      isBanned?: boolean;
+      role?: 'user' | 'admin';
       followers?: string[];
       following?: string[];
     } & DefaultSession["user"];
@@ -19,6 +21,8 @@ declare module "next-auth" {
     bio?: string | null;
     username?: string | null;
     isOnboarded?: boolean;
+    isBanned?: boolean;
+    role?: 'user' | 'admin';
     followers?: string[];
     following?: string[];
   }

@@ -1,3 +1,4 @@
+import "server-only";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";

@@ -506,16 +506,15 @@ export default function TextEditor({ analyzeEmotion }: { analyzeEmotion?: (emoti
             focusMode ? "mt-2" : ""
           }`}
         >
-          <div className="sticky top-0 flex flex-wrap pb-6 min-h-10 items-center gap-2 text-sm text-black">
+          <div className="sticky top-5 flex pb-6 min-h-10 items-center gap-2 text-black">
             {toolbarActions.map(({ action, icon: Icon, label, theme }) => (
               <button
                 key={action}
                 type="button"
                 onClick={() => handleToolbarAction(action)}
-                className={`inline-flex items-center gap-1 bg-white rounded-md border px-3 py-1.5 text-[11px] sm:text-xs font-semibold cursor-pointer ${theme.button}`}
+                className={`inline-flex items-center gap-1 bg-white rounded-md border px-3 py-1.5 text-[11px] font-semibold cursor-pointer ${theme.button}`}
               >
                 <Icon className={`h-4 w-4 ${theme.icon}`} />
-                {label}
               </button>
             ))}
           </div>

@@ -71,13 +71,13 @@ export default function PrivateNoteCard({ note, showMenu, onEdit, onDelete }: Pr
 
       {/* Title - Serif Font untuk Journal Feel */}
       <Link href={`/note/${noteId}`} className="block group">
-        <h3 className="font-serif text-xl font-semibold text-gray-800 mb-3 group-hover:text-gray-900 transition-colors">
+        <h3 className="font-serif text-lg font-semibold text-gray-800 mb-3 group-hover:text-gray-900 transition-colors">
           {note.title || "Untitled Entry"}
         </h3>
 
         {/* Content - Lebih personal, tidak truncate */}
         <div className="prose prose-sm max-w-none">
-          <p className=" leading-relaxed whitespace-pre-wrap font-serif">
+          <p className="text-base leading-relaxed whitespace-pre-wrap font-serif">
             {note.content}
           </p>
         </div>

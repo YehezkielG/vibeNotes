@@ -182,7 +182,7 @@ export default function ExplorePage() {
                   <Link
                     key={user._id}
                     href={`/profile/${user.username}`}
-                    className="flex items-center gap-3 rounded-xl border border-transparent bg-white/70 backdrop-blur transition-shadow">
+                    className="flex items-center gap-3 rounded-xl border border-transparent p-2 border-variant backdrop-blur transition-shadow">
                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                       <Image
                         src={user.image || "/default-profile.png"}

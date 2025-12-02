@@ -8,7 +8,6 @@ import DiscordProvider from "next-auth/providers/discord";
 // Normalize auth-related environment URLs so `new URL()` in auth library
 function ensureUrlProtocol(u?: string | undefined) {
   if (!u) return u;
-  // If already has scheme (http:// or https:// etc.), return as-is
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(u)) return u;
   return `https://${u}`;
 }
@@ -38,13 +37,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async session({ session, user }) {
       // Attach all user fields to session.user
-      const { id, username, displayName, image, isOnboarded } = user;
+      const { id, username, displayName, image, isOnboarded, email, isBanned, role } = user;
       session.user = {
         id,
         username: username ?? null,
         displayName: displayName ?? null,
         image: image ?? null,
         isOnboarded: isOnboarded ?? false,
+        email: email ?? null,
+        isBanned: isBanned ?? false,
+        role: role ?? 'user',
       };
       return session;
     },
@@ -57,6 +59,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const accounts = db.collection("accounts");
 
       const existingUser = await users.findOne({ email: user.email });
+      
+      if (existingUser?.isBanned) {
+        return false; // Block sign in if banned
+      }
+
       if (!existingUser) return true;
 
       const alreadyLinked = await accounts.findOne({

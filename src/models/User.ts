@@ -10,7 +10,9 @@ export interface IUser extends Document {
     displayName?: string;
     bio?: string;
     isOnboarded: boolean;
-  notificationsEnabled?: boolean;
+    isBanned?: boolean;
+    role?: 'user' | 'admin';
+    notificationsEnabled?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     followers?: Schema.Types.ObjectId[];
@@ -37,6 +39,15 @@ const UserSchema = new Schema<IUser>({
     isOnboarded: {
         type: Boolean,
         default: false,
+    },
+    isBanned: {
+        type: Boolean,
+        default: false,
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user',
     },
     notificationsEnabled: {
       type: Boolean,
@@ -65,5 +76,5 @@ UserSchema.add({
 
 
 const User = models.User || model<IUser>('User', UserSchema);
-
+ 
 export default User;

@@ -37,6 +37,9 @@ export async function GET(request: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.isBanned) {
+    return NextResponse.json({ message: "Account is banned" }, { status: 403 });
+  }
 
   await dbConnect();
 
@@ -75,6 +78,9 @@ export async function PATCH(request: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.isBanned) {
+    return NextResponse.json({ message: "Account is banned" }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const { ids, all } = body ?? {};
@@ -106,6 +112,9 @@ export async function DELETE(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.isBanned) {
+    return NextResponse.json({ message: "Account is banned" }, { status: 403 });
   }
 
   const body = await request.json().catch(() => ({}));

@@ -120,7 +120,7 @@ export default function PublicNoteCard({
         </h3>
 
         {/* Content Preview */}
-        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-3 leading-relaxed">
+        <p className="text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-3 leading-relaxed">
           {note.content}
         </p>
       </Link>
