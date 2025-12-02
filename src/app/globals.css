@@ -169,14 +169,13 @@ body {
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Mobile typography normalization: */
+/* Mobile typography normalization: force text-md (1rem / text-base in Tailwind v4) */
 
 @media (max-width: 1023px) {
   html, body {
     font-size: 16px;
   }
-  /* Force `text-sm` (0.875rem) for any utility that is `text-base` or larger */
-  .text-base,
+  /* Force text-md (1rem) for text-lg and larger utilities */
   .text-lg,
   .text-xl,
   .text-2xl,
@@ -186,29 +185,29 @@ body {
   .text-6xl,
   .text-7xl,
   .text-8xl {
-    font-size: 0.875rem !important; /* text-sm */
-    line-height: 1.35 !important;
+    font-size: 1rem !important; /* text-md */
+    line-height: 1.5 !important;
   }
 
-  /* Normalize headings which may not use text-* utilities */
+  /* Normalize headings to text-md (1rem) on mobile */
   h1, h2, h3, h4, h5, h6 {
-    font-size: 0.875rem !important;
-    line-height: 1.35 !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
     margin-top: 0.25rem !important;
     margin-bottom: 0.25rem !important;
   }
 
-  /* Ensure common text elements default to text-sm on mobile unless the */
-  p:not(.text-xs),
-  a:not(.text-xs),
-  span:not(.text-xs),
-  li:not(.text-xs),
-  button:not(.text-xs),
-  label:not(.text-xs),
-  input:not(.text-xs),
-  textarea:not(.text-xs),
-  div:not(.text-xs) {
-    font-size: 0.875rem !important;
-    line-height: 1.35 !important;
+  /* Ensure common text elements default to text-md on mobile, excluding smaller text utilities */
+  p:not(.text-xs):not(.text-sm),
+  a:not(.text-xs):not(.text-sm),
+  span:not(.text-xs):not(.text-sm),
+  li:not(.text-xs):not(.text-sm),
+  button:not(.text-xs):not(.text-sm),
+  label:not(.text-xs):not(.text-sm),
+  input:not(.text-xs):not(.text-sm),
+  textarea:not(.text-xs):not(.text-sm),
+  div:not(.text-xs):not(.text-sm) {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
   }
 }
