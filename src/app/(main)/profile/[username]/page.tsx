@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useRef } from "react";
 import { MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,6 +39,37 @@ export default function ProfilePage() {
   const [showLogout, setShowLogout] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef<HTMLButtonElement | null>(null);
+  const [activeTab, setActiveTab] = useState<"notes" | "followers" | "following">("notes");
+  const [followers, setFollowers] = useState<UserProfileType[]>([]);
+  const [following, setFollowing] = useState<UserProfileType[]>([]);
+  const [loadingTab, setLoadingTab] = useState(false);
+
+  useEffect(() => {
+    async function loadTabData() {
+      if (!user) return;
+      setLoadingTab(true);
+      try {
+        if (activeTab === "followers") {
+          const res = await fetch(`/api/profile/${username}/followers`);
+          if (res.ok) {
+            const data = await res.json();
+            setFollowers(data.followers ?? []);
+          }
+        } else if (activeTab === "following") {
+          const res = await fetch(`/api/profile/${username}/following`);
+          if (res.ok) {
+            const data = await res.json();
+            setFollowing(data.following ?? []);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load tab data:", err);
+      } finally {
+        setLoadingTab(false);
+      }
+    }
+    loadTabData();
+  }, [activeTab, username, user]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -68,8 +98,8 @@ export default function ProfilePage() {
           const notesData = await notesRes.json();
           setNotes(notesData.notes ?? []);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load profile");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load profile");
       } finally {
         setLoading(false);
       }
@@ -118,7 +148,7 @@ export default function ProfilePage() {
       }
       const data = await res.json();
       setIsFollowing(data.isFollowing ?? false);
-      if (data.stats) setStats(data.stats);
+      if (data.stats) setStats({ ...data.stats , publicNotes: stats.publicNotes });
     } finally {
       setFollowPending(false);
     }
@@ -173,13 +203,13 @@ export default function ProfilePage() {
                         aria-label="Profile settings"
                         onClick={() => setShowSettings((s) => !s)}
                         ref={settingsRef}
-                        className="p-2 rounded-full hover:bg-gray-100"
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
                       >
                         <MoreVertical size={18} />
                       </button>
 
                       {showSettings && (
-                        <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-md border border-gray-200 py-1 z-50">
+                        <div className="absolute right-0 mt-2 w-44 bg-card rounded-lg shadow-md border-variant border py-1 z-50">
                           <button
                             onClick={() => {
                               setShowSettings(false);
@@ -191,7 +221,7 @@ export default function ProfilePage() {
                               });
                               setShowEdit(true);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-white/10"
                           >
                             Edit Profile
                           </button>
@@ -200,7 +230,7 @@ export default function ProfilePage() {
                               setShowSettings(false);
                               setShowLogout(true);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-red-600"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-white/10 text-red-600"
                           >
                             Logout
                           </button>
@@ -211,14 +241,14 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center gap-6 text-sm text-gray-600">
-                <span>
+              <div className="mt-3 flex items-center gap-6 text-gray-600">
+                <span className="hover:underline cursor-default flex items-center gap-1 text-sm">
                   <strong>{stats.followers}</strong> Followers
                 </span>
-                <span>
+                <span className="hover:underline cursor-default flex items-center gap-1 text-sm">
                   <strong>{stats.following}</strong> Following
                 </span>
-                <span>
+                <span className="flex items-center gap-1 text-sm">
                   <strong>{stats.publicNotes}</strong> Notes
                 </span>
               </div>
@@ -241,7 +271,7 @@ export default function ProfilePage() {
 
               <motion.div
                 ref={modalRef}
-                className="relative z-10 w-full max-w-md rounded-xl bg-white p-4 shadow-lg"
+                className="relative z-10 w-full max-w-md rounded-xl bg-card p-4 shadow-lg"
                 initial={{ y: 30, opacity: 0, scale: 0.98 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: 20, opacity: 0, scale: 0.98 }}
@@ -271,7 +301,7 @@ export default function ProfilePage() {
                       // Broadcast updated user so other client components can update immediately
                       try {
                         window.dispatchEvent(new CustomEvent("vibe:sessionUpdate", { detail: data.user }));
-                      } catch (e) {
+                      } catch {
                         // ignore in environments where CustomEvent isn't allowed
                       }
                       setShowEdit(false);
@@ -279,9 +309,9 @@ export default function ProfilePage() {
                       if (data.user?.username && data.user.username !== username) {
                         router.push(`/profile/${data.user.username}`);
                       }
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                       console.error(err);
-                      setError(err.message || "An error occurred");
+                      setError(err instanceof Error ? err.message : "An error occurred");
                     } finally {
                       setIsSaving(false);
                     }
@@ -331,7 +361,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => setShowEdit(false)}
-                      className="rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="rounded-md px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
                     >
                       Cancel
                     </button>
@@ -364,16 +394,120 @@ export default function ProfilePage() {
         <p className="text-sm text-gray-500 whitespace-pre-wrap mt-5">{user.bio}</p>
       )}
       <hr className="my-5"/>
-      {/* Notes Section */}
+      
+      {/* Tabs */}
+      <div className="flex gap-6 border-b border-variant mb-6">
+        <button
+          onClick={() => setActiveTab("notes")}
+          className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "notes"
+              ? "border-accent text-accent"
+              : "border-transparent text-muted hover:text-foreground"
+          }`}
+        >
+          Notes ({stats.publicNotes})
+        </button>
+        <button
+          onClick={() => setActiveTab("followers")}
+          className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "followers"
+              ? "border-accent text-accent"
+              : "border-transparent text-muted hover:text-foreground"
+          }`}
+        >
+          Followers ({stats.followers})
+        </button>
+        <button
+          onClick={() => setActiveTab("following")}
+          className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "following"
+              ? "border-accent text-accent"
+              : "border-transparent text-muted hover:text-foreground"
+          }`}
+        >
+          Following ({stats.following})
+        </button>
+      </div>
+
+      {/* Tab Content */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">
-          Public Notes ({notes.length})
-        </h2>
-        {notes.length === 0 ? (
-          <p className="text-sm text-gray-500">No public notes yet.</p>
-        ) : (
-          <div className="space-y-10 my-5">
-            <ListNote notes={notes} />
+        {activeTab === "notes" && (
+          <div>
+            {notes.length === 0 ? (
+              <p className="text-sm text-gray-500">No public notes yet.</p>
+            ) : (
+              <div className="space-y-10 my-5">
+                <ListNote notes={notes} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "followers" && (
+          <div>
+            {loadingTab ? (
+              <p className="text-sm text-gray-500">Loading followers...</p>
+            ) : followers.length === 0 ? (
+              <p className="text-sm text-gray-500">No followers yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {followers.map((follower) => (
+                  <div
+                    key={follower._id}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                    onClick={() => router.push(`/profile/${follower.username}`)}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
+                      <Image
+                        src={transformAvatar(follower.image || "/default-profile.png", 48)}
+                        alt={follower.displayName}
+                        width={48}
+                        height={48}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{follower.displayName}</p>
+                      <p className="text-xs text-gray-500 truncate">@{follower.username}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "following" && (
+          <div>
+            {loadingTab ? (
+              <p className="text-sm text-gray-500">Loading following...</p>
+            ) : following.length === 0 ? (
+              <p className="text-sm text-gray-500">Not following anyone yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {following.map((user) => (
+                  <div
+                    key={user._id}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                    onClick={() => router.push(`/profile/${user.username}`)}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
+                      <Image
+                        src={transformAvatar(user.image || "/default-profile.png", 48)}
+                        alt={user.displayName}
+                        width={48}
+                        height={48}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{user.displayName}</p>
+                      <p className="text-xs text-gray-500 truncate">@{user.username}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -7,12 +7,14 @@ type ProfileSkeletonProps = {
 export default function ProfileSkeleton({ noteCount = 3 }: ProfileSkeletonProps) {
   return (
     <div className="space-y-6">
-      <div className="relative flex items-center gap-4 rounded-xl border border-transparent bg-white/70 backdrop-blur" role="status" aria-busy="true">
-        <div className="h-24 w-24 rounded-full skeleton-bg shrink-0" />
+      <div className="relative flex items-center gap-4 rounded-xl border border-variant bg-card backdrop-blur" role="status" aria-busy="true">
+        <div className="w-24 h-24 rounded-full overflow-hidden shrink-0">
+          <div className="w-full h-full skeleton-bg" />
+        </div>
         <div className="space-y-2">
           <div className="h-4 w-32 rounded-full skeleton-bg" />
           <div className="h-3 w-24 rounded-full skeleton-bg" />
-          <div className="flex gap-4 text-xs text-gray-400">
+          <div className="flex gap-4 text-xs text-muted">
             {[0, 1, 2].map((item) => (
               <div key={item} className="h-3 w-16 rounded-full skeleton-bg" />
             ))}
@@ -27,13 +29,13 @@ export default function ProfileSkeleton({ noteCount = 3 }: ProfileSkeletonProps)
             style={{
               width: "38%",
               height: "100%",
-              background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0) 100%)",
+              background: "var(--shimmer-overlay)",
               transform: "translateX(-120%)",
             }}
           />
         </div>
       </div>
-        <hr className="my-10 border-gray-600"/>
+        <hr className="my-10 mb-15 border-variant"/>
       <NoteCardSkeleton count={noteCount} />
     </div>
   );

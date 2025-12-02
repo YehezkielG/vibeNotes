@@ -15,6 +15,7 @@
   --card: #ffffff;
   --muted: #f7f7f7;
   --border: #e5e7eb;
+  --shimmer-overlay: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0) 100%);
   --accent: #6366f1; /* default light accent (indigo-500) */
   --accent-weak: rgba(99,102,241,0.08);
   --scrollbar-size: 12px;
@@ -35,6 +36,7 @@
   --border: rgba(255,255,255,0.04); /* subtle border */
   --accent: #8b5cf6;        /* purple accent used in screenshot */
   --accent-weak: rgba(139,92,246,0.14);
+  --shimmer-overlay: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.04) 50%, rgba(0,0,0,0) 100%);
   --scrollbar-track: rgba(255,255,255,0.06);
   --scrollbar-thumb: rgba(255,255,255,0.22);
   --scrollbar-thumb-hover: rgba(255,255,255,0.34);
@@ -59,6 +61,7 @@ body {
 /* Accent mappings */
 .text-accent { color: var(--accent) !important; }
 .bg-accent { background-color: var(--accent) !important; }
+.border-accent { border-color: var(--accent) !important; }
 .accent-weak { background-color: var(--accent-weak) !important; }
 
 /* Convenience text helpers for theme-aware text colors */
