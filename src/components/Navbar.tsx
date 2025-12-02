@@ -206,7 +206,7 @@ export default function Navbar() {
                     </Link>
               )}
             </div>
-            <div className="absolute bottom-10">
+            <div className="absolute bottom-8">
             <ThemeToggle />
             </div>
           </div>

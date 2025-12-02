@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import { transformAvatar } from "@/lib/utils/image";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import SuggestionsSkeleton from "@/components/skeletons/SuggestionsSkeleton";
@@ -15,7 +14,6 @@ type Suggestion = {
 };
 
 export default function RightSidebar() {
-  const { data: session, status } = useSession();
   // Sidebar no longer renders the avatar dropdown (moved to Navbar)
   const [suggestions, setSuggestions] = useState<{ newest: Suggestion[]; recent: Suggestion[] } | null>(null);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
@@ -51,7 +49,7 @@ export default function RightSidebar() {
       {loadingSuggestions ? (
         <SuggestionsSkeleton />
       ) : suggestions && (
-        <aside className="px-2">
+        <aside className="">
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Suggested for you</h4>
           {/* Desktop/large: vertical list */}
           <div className="hidden lg:block">

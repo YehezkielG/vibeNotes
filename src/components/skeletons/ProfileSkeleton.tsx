@@ -7,7 +7,7 @@ type ProfileSkeletonProps = {
 export default function ProfileSkeleton({ noteCount = 3 }: ProfileSkeletonProps) {
   return (
     <div className="space-y-6">
-      <div className="relative flex items-center gap-4 rounded-xl border border-variant bg-card backdrop-blur" role="status" aria-busy="true">
+      <div className="relative flex items-center gap-4 rounded-xl bg-card backdrop-blur" role="status" aria-busy="true">
         <div className="w-24 h-24 rounded-full overflow-hidden shrink-0">
           <div className="w-full h-full skeleton-bg" />
         </div>

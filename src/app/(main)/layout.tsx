@@ -59,11 +59,10 @@ export default function RootLayout({
             {/* Right sidebar collapses below main on mobile */}
             <aside className="lg:sticky lg:top-0 lg:h-svh w-full lg:w-2/12 flex flex-col gap-4 mt-6 lg:mt-0">
               <RightSidebar />
-              <div className="mt-auto text-[10px] opacity-75">
+              <div className="mt-auto opacity-75">
                 <Footer />
               </div>
             </aside>
-            {/* Mobile bottom navigation */}
             <BottomNav />
           </div>
           </ThemeProvider>
