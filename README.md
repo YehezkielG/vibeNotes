@@ -62,6 +62,14 @@ MONGODB_URI=your_mongodb_connection_string
 AUTH_SECRET=your_secret_key_here
 NEXTAUTH_URL=http://localhost:3000
 
+# auth 
+RESEND_API_KEY=
+EMAIL_FROM="VibeNotes <onboarding@resend.dev>"
+
+# oAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
 # Cloudinary
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
