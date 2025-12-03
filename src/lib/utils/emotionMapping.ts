@@ -90,9 +90,9 @@ export const getLabelColor = (label: string): string => {
     fear: "#7E57C2", // purple - uneasy / anxious
     gratitude: "#FFB74D", // warm gold - thankful
     grief: "#37474F", // very dark slate - heavy sorrow
-    joy: "#FFD54F", // sunny yellow - happiness
-    love: "#E91E63", // rosy red - affection
-    nervousness: "#FFCA28", // amber - jittery
+    joy: "#FFD54F", // sunny yellow - happiness            
+    love: "#E91E63", // rosy red - affection               
+    nervousness: "#FFCA28", // amber - jittery             
     optimism: "#00E676", // bright green - hopeful
     pride: "#FF8A65", // coral - confident
     realization: "#29B6F6", // bright blue - aha moment
