@@ -4,6 +4,8 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongoClient";
 import Google from "next-auth/providers/google";
 import DiscordProvider from "next-auth/providers/discord";
+import { generateMagicLinkEmail, generateMagicLinkTextEmail } from "@/lib/email-templates";
+import { Resend as ResendClient } from "resend";
 
 // Normalize auth-related environment URLs so `new URL()` in auth library
 function ensureUrlProtocol(u?: string | undefined) {
@@ -16,12 +18,30 @@ process.env.NEXTAUTH_URL = ensureUrlProtocol(process.env.NEXTAUTH_URL ?? process
 process.env.AUTH_URL = ensureUrlProtocol(process.env.AUTH_URL ?? process.env.NEXTAUTH_URL) ?? process.env.AUTH_URL;
 process.env.NEXTAUTH_URL_INTERNAL = ensureUrlProtocol(process.env.NEXTAUTH_URL_INTERNAL ?? process.env.NEXTAUTH_URL) ?? process.env.NEXTAUTH_URL_INTERNAL;
 
+const resendClient = new ResendClient(process.env.RESEND_API_KEY!);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY!,
       from: process.env.EMAIL_FROM!,
+      sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+        const host = new URL(url).origin;
+        
+        try {
+          await resendClient.emails.send({
+            from: provider.from!,
+            to: email,
+            subject: "Masuk ke vibeNotes — Link verifikasi Anda",
+            html: generateMagicLinkEmail({ url, host, email }),
+            text: generateMagicLinkTextEmail({ url, host, email }),
+          });
+        } catch (error) {
+          console.error("Failed to send verification email:", error);
+          throw new Error("Failed to send verification email");
+        }
+      },
     }),
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
